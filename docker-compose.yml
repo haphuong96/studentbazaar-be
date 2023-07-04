@@ -1,0 +1,12 @@
+services:
+  db-mysql:
+    image: mysql:8.0.33
+    volumes:
+      - studentbazaar-mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: student-bazaar
+    ports:
+      - 3306:3306
+volumes:
+  studentbazaar-mysql-data:
