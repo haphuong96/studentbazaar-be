@@ -2,6 +2,9 @@
 /dist
 /node_modules
 
+# metadata cache
+/temp
+
 # Logs
 logs
 *.log
