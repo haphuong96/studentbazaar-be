@@ -34,4 +34,22 @@ export class User {
 
   @Property()
   password!: string;
+
+  constructor(
+    id: number,
+    username: string,
+    emailAddress: string,
+    university?: University,
+    campus?: CampusLocation,
+    fullname?: string,
+    password?: string,
+  ) {
+    this.id = id;
+    this.university = university;
+    this.campus = campus;
+    this.fullname = fullname;
+    this.username = username;
+    this.emailAddress = emailAddress;
+    this.password = password;
+  }
 }

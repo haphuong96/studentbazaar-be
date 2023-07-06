@@ -25,4 +25,10 @@ export class University {
 
   @OneToMany({ mappedBy: 'university' })
   user?: User;
+
+  constructor(id: number, universityName: string, emailAddressDomain: string) {
+    this.id = id;
+    this.universityName = universityName;
+    this.emailAddressDomain = emailAddressDomain;
+  }
 }
