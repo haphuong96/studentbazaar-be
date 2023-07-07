@@ -14,7 +14,7 @@ describe('AuthController', () => {
   let authService: AuthService;
 
   beforeEach(async () => {
-    const moduleRef : TestingModule = await Test.createTestingModule({
+    const moduleRef: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         // https://docs.nestjs.com/fundamentals/custom-providers
@@ -29,19 +29,7 @@ describe('AuthController', () => {
           },
         },
       ],
-    })
-      // .useMocker((token) => {
-      //   if (token === AuthService) {
-      //     return {
-      //       checkEmailAddress: jest
-      //         .fn()
-      //         .mockImplementation((emailAddress: string) =>
-      //           Promise.resolve(oneUni),
-      //         ),
-      //     };
-      //   }
-      // })
-      .compile();
+    }).compile();
 
     authController = moduleRef.get<AuthController>(AuthController);
     authService = moduleRef.get<AuthService>(AuthService);
@@ -50,8 +38,7 @@ describe('AuthController', () => {
   describe('Signup', () => {
     describe('checkEmailAddress', () => {
       it('should return a university', async () => {
-        const checkMailSpy = jest
-          .spyOn(authService, 'checkEmailAddress')
+        const checkMailSpy = jest.spyOn(authService, 'checkEmailAddress');
 
         expect(await authController.checkEmailAddress(reqEmail)).toEqual(
           oneUni,

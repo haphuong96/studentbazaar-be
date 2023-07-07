@@ -3,6 +3,7 @@ import { University } from '../market/entities/university.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository } from '@mikro-orm/mysql';
 import { User } from '../user/entities/user.entity';
+import { errorMessage } from '../../common/messages.common';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,7 @@ export class AuthService {
     
     if (!university) {
       throw new HttpException(
-        'This email address is either not a valid student email address or this university email address has not yet been registered into our system. Please try again.',
+        errorMessage.INVALID_UNIVERSITY_EMAIL_ADDRESS_DOMAIN,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -34,7 +35,7 @@ export class AuthService {
 
     if (user) {
       throw new HttpException(
-        'This email address has already been registered. Please try again with another email address.',
+        errorMessage.INVALID_EXISTED_EMAIL,
         HttpStatus.BAD_REQUEST,
       );
     }
