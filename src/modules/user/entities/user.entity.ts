@@ -18,7 +18,7 @@ export class User {
   university!: University;
 
   @ManyToOne()
-  campus!: CampusLocation;
+  campus?: CampusLocation;
 
   @OneToMany({ mappedBy: 'owner' })
   item?: Item;
@@ -32,24 +32,24 @@ export class User {
   @Property({ length: 255 })
   emailAddress!: string;
 
-  @Property()
+  @Property({ columnType: 'varbinary(255)' })
   password!: string;
 
-  constructor(
-    id: number,
-    username: string,
-    emailAddress: string,
-    university?: University,
-    campus?: CampusLocation,
-    fullname?: string,
-    password?: string,
-  ) {
-    this.id = id;
-    this.university = university;
-    this.campus = campus;
-    this.fullname = fullname;
-    this.username = username;
-    this.emailAddress = emailAddress;
-    this.password = password;
+  constructor(user: {
+    id?: number;
+    username: string;
+    emailAddress: string;
+    university?: University;
+    campus?: CampusLocation;
+    fullname?: string;
+    password?: string;
+  }) {
+    this.id = user.id;
+    this.university = user.university;
+    this.campus = user.campus;
+    this.fullname = user.fullname;
+    this.username = user.username;
+    this.emailAddress = user.emailAddress;
+    this.password = user.password;
   }
 }

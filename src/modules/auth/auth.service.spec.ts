@@ -20,7 +20,7 @@ const uniArray: University[] = [
 ];
 
 const userArray: User[] = [
-  new User(1, 'GreenBubbleTea', 'phuong96@qub.ac.uk', uniArray[1]),
+  new User({id: 1, username: 'GreenBubbleTea', emailAddress: 'phuong96@qub.ac.uk', university: uniArray[1]}),
 ];
 
 const retrieveEmailDomain = (emailAddress: string) =>

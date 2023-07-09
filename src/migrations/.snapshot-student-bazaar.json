@@ -355,7 +355,7 @@
           "unsigned": true,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
           "mappedType": "integer"
         },
         "fullname": {
@@ -390,12 +390,12 @@
         },
         "password": {
           "name": "password",
-          "type": "varchar(255)",
+          "type": "varbinary(255)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "string"
+          "mappedType": "unknown"
         }
       },
       "name": "user",
@@ -452,6 +452,7 @@
             "id"
           ],
           "referencedTableName": "campus_location",
+          "deleteRule": "set null",
           "updateRule": "cascade"
         }
       }
