@@ -20,9 +20,7 @@ export class AuthController {
     }
 
     @Post('login')
-    login(@Body() loginDto: LoginDto): Promise<{accessToken: string, 
-        // refreshToken: string
-    }> {
+    login(@Body() loginDto: LoginDto): Promise<{accessToken: string, refreshToken: string}> {
         return this.authService.verifyUser(loginDto);
     }
 

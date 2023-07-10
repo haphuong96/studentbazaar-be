@@ -1,5 +1,8 @@
 export const authConfig = () => ({
   jwtConstants: {
-    secret: process.env.ACCESS_TOKEN_KEY,
+    accessTokenSecret: process.env.ACCESS_TOKEN_KEY,
+    refreshTokenSecret: process.env.REFRESH_TOKEN_KEY,
+    accessTokenExpire: process.env.ACCESS_TOKEN_EXPIRE,
+    refreshTokenExpire: process.env.REFRESH_TOKEN_EXPIRE,
   },
 });

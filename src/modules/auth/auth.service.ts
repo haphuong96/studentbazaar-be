@@ -7,6 +7,7 @@ import { errorMessage } from '../../common/messages.common';
 import { LoginDto, RegisterUserDto } from './dto/signup.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -19,11 +20,18 @@ export class AuthService {
 
     private readonly em: EntityManager,
 
+    private configService: ConfigService,
+
     private readonly jwtService: JwtService
 
   ) {}
 
-  async verifyUser(loginUser: LoginDto) : Promise<{accessToken: string}> {
+  /**
+   * Verify user credentials. If valid, return a pair of access token and refresh token.
+   * @param loginUser 
+   * @returns 
+   */
+  async verifyUser(loginUser: LoginDto) : Promise<{accessToken: string, refreshToken: string}> {
     // find user
     const userFound : User = await this.userRepository.findOne({ 
       $or: [
@@ -37,14 +45,23 @@ export class AuthService {
     });
 
     if (userFound) {
-      console.log('userFound', userFound.password.toString());
       const isMatch = await bcrypt.compare(loginUser.password, userFound.password.toString());
 
       if (isMatch) {
         // User can log in
         // create JWT token
         const payload = { sub: userFound.id, username: userFound.username};
-        return { accessToken : await this.jwtService.signAsync(payload) }
+        return { 
+          accessToken : await this.jwtService.signAsync(payload, {
+            expiresIn: this.configService.get<string>('jwtConstants.accessTokenExpire'),
+            secret: this.configService.get<string>('jwtConstants.accessTokenSecret'),
+          }),
+
+          refreshToken: await this.jwtService.signAsync(payload, {
+            expiresIn: this.configService.get<string>('jwtConstants.refreshTokenExpire'),
+            secret: this.configService.get<string>('jwtConstants.refreshTokenSecret'),
+          })
+        }
       }
     }
     // 

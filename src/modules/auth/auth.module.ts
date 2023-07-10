@@ -13,13 +13,8 @@ import { ConfigService } from '@nestjs/config';
   imports: [
     MikroOrmModule.forFeature([User, University]),
     // https://github.com/nestjs/jwt/blob/master/README.md
-    JwtModule.registerAsync({
-      useFactory: (configService: ConfigService) => ({
-        global: true,
-        secret: configService.get<string>('jwtConstants.secret'),
-        signOptions: { expiresIn: '1h' },
-      }),
-      inject: [ConfigService],
+    JwtModule.register({
+      global: true,
     }),
   ],
 })
