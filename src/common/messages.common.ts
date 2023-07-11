@@ -5,4 +5,6 @@ export const errorMessage = {
     'This email address has already been registered. Please try again with another email address.',
   INVALID_EXISTED_USERNAME:
     'This username already existed. Please try again with another username.',
+  INVALID_CREDENTIALS: 'Invalid credentials. Please try again.',
+  UNAUTHORIZED: 'Unauthorized',
 };

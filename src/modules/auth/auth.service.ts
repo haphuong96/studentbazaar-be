@@ -8,6 +8,8 @@ import { LoginDto, RegisterUserDto } from './dto/signup.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { AuthUtility } from 'src/modules/auth/auth.util';
+import { ITokenPayload } from './auth.interface';
 
 @Injectable()
 export class AuthService {
@@ -22,8 +24,9 @@ export class AuthService {
 
     private configService: ConfigService,
 
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
 
+    private authUtility: AuthUtility
   ) {}
 
   /**
@@ -50,21 +53,24 @@ export class AuthService {
       if (isMatch) {
         // User can log in
         // create JWT token
-        const payload = { sub: userFound.id, username: userFound.username};
-        return { 
-          accessToken : await this.jwtService.signAsync(payload, {
-            expiresIn: this.configService.get<string>('jwtConstants.accessTokenExpire'),
-            secret: this.configService.get<string>('jwtConstants.accessTokenSecret'),
-          }),
+        const payload : ITokenPayload = { sub: userFound.id, username: userFound.username};
+        return await this.authUtility.generateTokens(payload);
+        // { 
+        //   accessToken : await this.jwtService.signAsync(payload, {
+        //     expiresIn: this.configService.get<string>('jwtConstants.accessTokenExpire'),
+        //     secret: this.configService.get<string>('jwtConstants.accessTokenSecret'),
+        //   }),
 
-          refreshToken: await this.jwtService.signAsync(payload, {
-            expiresIn: this.configService.get<string>('jwtConstants.refreshTokenExpire'),
-            secret: this.configService.get<string>('jwtConstants.refreshTokenSecret'),
-          })
-        }
+        //   refreshToken: await this.jwtService.signAsync(payload, {
+        //     expiresIn: this.configService.get<string>('jwtConstants.refreshTokenExpire'),
+        //     secret: this.configService.get<string>('jwtConstants.refreshTokenSecret'),
+        //   })
+        // }
       }
     }
-    // 
+
+    // else user rejected
+    throw new HttpException(errorMessage.INVALID_CREDENTIALS, HttpStatus.BAD_REQUEST);
   }
 
   /**
@@ -136,5 +142,22 @@ export class AuthService {
     })
 
     await this.em.persistAndFlush(userCreate);
+  }
+
+  async refreshToken(refreshToken: string) : Promise<{accessToken: string, refreshToken: string}> {
+    // Verify refresh token
+    const payload : ITokenPayload = await this.authUtility.verifyToken(refreshToken, this.configService.get<string>('jwtConstants.refreshTokenSecret'));
+    // const payload = await this.jwtService.verifyAsync(tokens.refreshToken, {
+    //   secret: this.configService.get<string>('jwtConstants.refreshTokenSecret'),
+    // });
+    console.log('payload', payload);
+    // Create new access token
+    return await this.authUtility.generateTokens(payload);
+    // return {
+    //   accessToken: await this.jwtService.signAsync(payload, {
+    //     expiresIn: this.configService.get<string>('jwtConstants.accessTokenExpire'),
+    //     secret: this.configService.get<string>('jwtConstants.accessTokenSecret'),
+    //   })
+    // }
   }
 }
