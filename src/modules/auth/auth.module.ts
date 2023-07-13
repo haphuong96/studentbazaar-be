@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt/dist';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
 import { AuthUtility } from 'src/modules/auth/auth.util';
+import { Authentication } from './entities/auth.entity';
 
 @Module({
   controllers: [AuthController],
@@ -20,7 +21,7 @@ import { AuthUtility } from 'src/modules/auth/auth.util';
     },
   ],
   imports: [
-    MikroOrmModule.forFeature([User, University]),
+    MikroOrmModule.forFeature([User, University, Authentication]),
     // https://github.com/nestjs/jwt/blob/master/README.md
     JwtModule.register({
       global: true,

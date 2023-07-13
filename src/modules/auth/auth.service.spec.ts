@@ -8,7 +8,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { DeepMocked, createMock } from '@golevelup/ts-jest';
 import { Loaded } from '@mikro-orm/core';
 import { MockType } from '../../utils/test.util';
-import { errorMessage } from '../../common/messages.common';
+import { ErrorMessage } from '../../common/messages.common';
 
 const validEmail = 'pnguyen09@qub.ac.uk';
 const invalidUniEmail = 'pnguyen09@gmail.com';
@@ -97,7 +97,7 @@ describe('AuthService', () => {
         } catch (e) {
           expect(e).toBeInstanceOf(HttpException);
           expect(e.status).toBe(HttpStatus.BAD_REQUEST);
-          expect(e.response).toBe(errorMessage.INVALID_UNIVERSITY_EMAIL_ADDRESS_DOMAIN);
+          expect(e.response).toBe(ErrorMessage.INVALID_UNIVERSITY_EMAIL_ADDRESS_DOMAIN);
         }
 
         expect(uniRepoSpy).toBeCalledWith({
@@ -119,7 +119,7 @@ describe('AuthService', () => {
         } catch (e) {
           expect(e).toBeInstanceOf(HttpException);
           expect(e.status).toBe(HttpStatus.BAD_REQUEST);
-          expect(e.response).toBe(errorMessage.INVALID_EXISTED_EMAIL);
+          expect(e.response).toBe(ErrorMessage.INVALID_EXISTED_EMAIL);
         }
 
         expect(userRepoSpy).toBeCalledWith({

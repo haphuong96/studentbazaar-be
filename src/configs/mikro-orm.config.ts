@@ -10,6 +10,7 @@ const config: Options = {
     path: './dist/migrations',
     pathTs: './src/migrations',
   },
+  forceUtcTimezone: true,
 };
 
 export default config;

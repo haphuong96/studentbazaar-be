@@ -27,6 +27,20 @@ export class AuthController {
     }
 
     @Public()
+    @Get('email/verify')
+    async verifyEmail(@Query('token') token: string): Promise<string> {
+        const isVerified : boolean = await this.authService.verifyEmail(token);
+        if (isVerified) return "Email verified successfully";
+    }
+
+    @Public()
+    @Post('email/resend-verification')
+    async sendVerificationEmail(@Body('email') email: string): Promise<void> {
+        const sent = await this.authService.sendVerificationEmail(email);
+        return;
+    }
+
+    @Public()
     @Post('login')
     async login(@Body() loginDto: LoginDto): Promise<{accessToken: string, refreshToken: string}> {
         return this.authService.verifyUser(loginDto);

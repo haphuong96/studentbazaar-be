@@ -3,7 +3,7 @@ import { University } from '../market/entities/university.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
 import { User } from '../user/entities/user.entity';
-import { errorMessage } from '../../common/messages.common';
+import { ErrorMessage } from '../../common/messages.common';
 import { LoginDto, RegisterUserDto } from './dto/signup.dto';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
@@ -12,8 +12,11 @@ import { ConfigService } from '@nestjs/config';
 import { AuthUtility } from 'src/modules/auth/auth.util';
 import { ITokenPayload } from './auth.interface';
 import { google } from 'googleapis';
+import { SALT_ROUNDS } from 'src/common/auth.constants';
+import { Authentication, AuthenticationType } from './entities/auth.entity';
+import crypto from 'crypto';
 
-// TODO: 
+// TODO:
 // - [ ] Refactor AuthUtility
 // - [ ] Refactor send email
 // - [ ] unit test, .env file...
@@ -25,6 +28,9 @@ export class AuthService {
 
     @InjectRepository(User)
     private readonly userRepository: EntityRepository<User>,
+
+    @InjectRepository(Authentication)
+    private readonly authRepository: EntityRepository<Authentication>,
 
     private readonly em: EntityManager,
 
@@ -56,14 +62,16 @@ export class AuthService {
     });
 
     if (userFound) {
-      const isMatch = await bcrypt.compare(
+      const isMatch: boolean = await bcrypt.compare(
         loginUser.password,
         userFound.password.toString(),
       );
 
       if (isMatch) {
-        // User can log in
-        // create JWT token
+        // Correct credentials
+        // Check if user has been verified
+        const auth: Authentication = await this.authRepository.findOne({user: userFound, type: AuthenticationType.EMAIL_VERIFICATION}); 
+        // Login successfully! Create JWT token
         const payload: ITokenPayload = {
           sub: userFound.id,
           username: userFound.username,
@@ -85,7 +93,7 @@ export class AuthService {
 
     // else user rejected
     throw new HttpException(
-      errorMessage.INVALID_CREDENTIALS,
+      ErrorMessage.INVALID_CREDENTIALS,
       HttpStatus.BAD_REQUEST,
     );
   }
@@ -106,7 +114,7 @@ export class AuthService {
 
     if (!university) {
       throw new HttpException(
-        errorMessage.INVALID_UNIVERSITY_EMAIL_ADDRESS_DOMAIN,
+        ErrorMessage.INVALID_UNIVERSITY_EMAIL_ADDRESS_DOMAIN,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -115,10 +123,10 @@ export class AuthService {
     const user: User = await this.userRepository.findOne({
       emailAddress: emailAddress,
     });
-    errorMessage.INVALID_EXISTED_EMAIL = 'a';
+
     if (user) {
       throw new HttpException(
-        errorMessage.INVALID_EXISTED_EMAIL,
+        ErrorMessage.INVALID_EXISTED_EMAIL,
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -145,13 +153,12 @@ export class AuthService {
 
     if (checkUser) {
       throw new HttpException(
-        errorMessage.INVALID_EXISTED_USERNAME,
+        ErrorMessage.INVALID_EXISTED_USERNAME,
         HttpStatus.BAD_REQUEST,
       );
     }
     // Hash password
-    const saltRounds = 10;
-    const hash = await bcrypt.hash(newUser.password, saltRounds);
+    const hash: string = await bcrypt.hash(newUser.password, SALT_ROUNDS);
 
     // Create new user
     const userCreate: User = new User({
@@ -171,55 +178,80 @@ export class AuthService {
   // https://nodemailer.com/smtp/oauth2/
   // https://oauth.net/2/grant-types/client-credentials/
   async sendVerificationEmail(emailAddress: string) {
+    // before sending verification email, always create or update email token first
+    const auth : Authentication = await this.createEmailToken(emailAddress);
+
     await this.sendEmail({
-      subject: "Test",
-      text: "I am sending an email from nodemailer!",
-      to: emailAddress,
-      from: process.env.EMAIL
+      subject: 'Test',
+      text: `I am sending an email from nodemailer!.url: ${this.configService.get<string>('email.emailVerificationUrl')}?token=${auth.token}`,
+      to: 'tnguyen09@qub.ac.uk',
+      from: process.env.EMAIL,
     });
-    
   }
-  
+
   async sendEmail(emailOptions) {
     let emailTransporter = await this.createTransporter();
     await emailTransporter.sendMail(emailOptions);
-  };
+  }
 
   async createTransporter() {
-    const Oauth2 = google.auth.OAuth2;
-    const oauth2Client = new Oauth2(
-      process.env.CLIENT_ID,
-      process.env.CLIENT_SECRET,
-      'https://developers.google.com/oauthplayground',
-    );
-
-    oauth2Client.setCredentials({
-      refresh_token: process.env.REFRESH_TOKEN,
-    })
-
-    const accessToken = await new Promise((resolve, reject) => {
-      oauth2Client.getAccessToken((err, token) => {
-        if (err) {
-          reject("Failed to create access token :(");
-        }
-        resolve(token);
-      });
-    });
-
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         type: 'OAuth2',
         user: process.env.EMAIL,
-        accessToken,
         clientId: process.env.CLIENT_ID,
         clientSecret: process.env.CLIENT_SECRET,
         refreshToken: process.env.REFRESH_TOKEN,
       },
     });
     return transporter;
-
   }
+
+  async createEmailToken(emailAddress: string) : Promise<Authentication> {
+    // check if email address is valid
+    const userFound: User = await this.userRepository.findOne({
+      emailAddress: emailAddress,
+    });
+
+    if (!userFound) {
+      throw new HttpException(
+        ErrorMessage.USER_NOT_FOUND,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // create email token and store in database
+    const emailToken: string = crypto.randomBytes(64).toString('hex');
+    // await bcrypt.hash(emailAddress, SALT_ROUNDS);
+
+    const auth : Authentication = await this.em.upsert(Authentication, {
+      token: emailToken, 
+      user: userFound,
+      type: AuthenticationType.EMAIL_VERIFICATION,
+      expiredAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
+    });
+
+    this.em.flush();
+    return auth;
+  }
+
+  async verifyEmail(token: string) : Promise<boolean> {
+    // find token in database
+    const auth : Authentication = await this.authRepository.findOne({token: token, type: AuthenticationType.EMAIL_VERIFICATION});
+
+    if (!auth) {
+      throw new HttpException(
+        ErrorMessage.INVALID_TOKEN,
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    // delete token
+    await this.em.removeAndFlush(auth);
+    return true;
+  }
+
   async refreshToken(
     refreshToken: string,
   ): Promise<{ accessToken: string; refreshToken: string }> {
