@@ -155,62 +155,6 @@
           "nullable": false,
           "mappedType": "integer"
         },
-        "status_code": {
-          "name": "status_code",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "status_name": {
-          "name": "status_name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        }
-      },
-      "name": "item_status",
-      "indexes": [
-        {
-          "columnNames": [
-            "status_code"
-          ],
-          "composite": false,
-          "keyName": "item_status_status_code_unique",
-          "primary": false,
-          "unique": true
-        },
-        {
-          "keyName": "PRIMARY",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "unsigned": true,
-          "autoincrement": true,
-          "primary": true,
-          "nullable": false,
-          "mappedType": "integer"
-        },
         "university_name": {
           "name": "university_name",
           "type": "varchar(255)",
@@ -495,14 +439,21 @@
           "nullable": false,
           "mappedType": "integer"
         },
-        "status_id": {
-          "name": "status_id",
-          "type": "int",
-          "unsigned": true,
+        "status": {
+          "name": "status",
+          "type": "enum('DRAFT', 'PUBLISHED', 'RESERVED', 'SOLD', 'HIDDEN')",
+          "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "integer"
+          "enumItems": [
+            "DRAFT",
+            "PUBLISHED",
+            "RESERVED",
+            "SOLD",
+            "HIDDEN"
+          ],
+          "mappedType": "enum"
         },
         "item_name": {
           "name": "item_name",
@@ -585,15 +536,6 @@
           "unique": false
         },
         {
-          "columnNames": [
-            "status_id"
-          ],
-          "composite": false,
-          "keyName": "item_status_id_index",
-          "primary": false,
-          "unique": false
-        },
-        {
           "keyName": "PRIMARY",
           "columnNames": [
             "id"
@@ -639,18 +581,6 @@
             "id"
           ],
           "referencedTableName": "item_condition",
-          "updateRule": "cascade"
-        },
-        "item_status_id_foreign": {
-          "constraintName": "item_status_id_foreign",
-          "columnNames": [
-            "status_id"
-          ],
-          "localTableName": "item",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "item_status",
           "updateRule": "cascade"
         }
       }

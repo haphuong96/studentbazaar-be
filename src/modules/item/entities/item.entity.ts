@@ -5,11 +5,11 @@ import {
   PrimaryKey,
   Property,
   OneToMany,
+  Enum,
 } from '@mikro-orm/core';
 import { User } from '../../user/entities/user.entity';
 import { ItemCategory } from './category.entity';
 import { ItemCondition } from './condition.entity';
-import { ItemStatus } from './status.entity';
 import { ItemImage } from './image.entity';
 
 @Entity()
@@ -26,7 +26,7 @@ export class Item {
   @ManyToOne()
   condition!: ItemCondition;
 
-  @ManyToOne()
+  @Enum(() => ItemStatus)
   status!: ItemStatus;
 
   @OneToMany({ mappedBy: 'item' })
@@ -46,4 +46,34 @@ export class Item {
 
   @Property({ type: types.datetime, defaultRaw: `current_timestamp()` })
   lastUpdatedDatetime!: Date;
+
+  constructor(item: {
+    id?: number;
+    owner: User;
+    category?: ItemCategory;
+    condition?: ItemCondition;
+    status: ItemStatus;
+    itemName?: string;
+    itemDescription?: string;
+    itemPrice?: number;
+  }) {
+    this.id = item.id;
+    this.owner = item.owner;
+    this.category = item.category;
+    this.condition = item.condition;
+    this.status = item.status;
+    this.itemName = item.itemName;
+    this.itemDescription = item.itemDescription;
+    this.itemPrice = item.itemPrice;
+  }
+}
+
+
+
+export enum ItemStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  RESERVED = 'RESERVED',
+  SOLD = 'SOLD',
+  HIDDEN = 'HIDDEN',
 }

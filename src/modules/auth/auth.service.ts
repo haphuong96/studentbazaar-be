@@ -71,6 +71,11 @@ export class AuthService {
         // Correct credentials
         // Check if user has been verified
         const auth: Authentication = await this.authRepository.findOne({user: userFound, type: AuthenticationType.EMAIL_VERIFICATION}); 
+        
+        if (auth) {
+          throw new HttpException(ErrorMessage.EMAIL_NOT_VERIFIED, HttpStatus.FORBIDDEN);
+        }
+        
         // Login successfully! Create JWT token
         const payload: ITokenPayload = {
           sub: userFound.id,
