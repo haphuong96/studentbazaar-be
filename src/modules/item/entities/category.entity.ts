@@ -6,9 +6,10 @@ import {
   OneToMany,
 } from '@mikro-orm/core';
 import { Item } from './item.entity';
+import { RecursiveRelationEntity } from 'src/utils/nest-children-entities.util';
 
 @Entity()
-export class ItemCategory {
+export class ItemCategory implements RecursiveRelationEntity<ItemCategory> {
   @PrimaryKey()
   id!: number;
 
@@ -16,8 +17,12 @@ export class ItemCategory {
   categoryName!: string;
 
   @ManyToOne()
-  parentCategory?: ItemCategory;
+  parent?: ItemCategory;
 
   @OneToMany({ mappedBy: 'category' })
   item?: Item;
+
+  @Property({ persist: false })
+  children: ItemCategory[];
+
 }

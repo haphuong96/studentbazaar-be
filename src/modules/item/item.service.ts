@@ -31,6 +31,8 @@ export class ItemService {
     }
 
     async getItems(): Promise<Item[]> {
-        return await this.itemRepository.findAll();
+        return await this.itemRepository.findAll({
+            populate: ['owner', 'category', 'condition']
+        });
     }
 }

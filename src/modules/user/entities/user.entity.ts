@@ -32,7 +32,7 @@ export class User {
   @Property({ length: 255 })
   emailAddress!: string;
 
-  @Property({ columnType: 'varbinary(255)' })
+  @Property({ columnType: 'varbinary(255)', hidden: true })
   password!: string;
 
   constructor(user: {
