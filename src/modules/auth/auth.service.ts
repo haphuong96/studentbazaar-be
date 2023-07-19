@@ -12,6 +12,10 @@ import { ConfigService } from '@nestjs/config';
 import { AuthUtility } from 'src/modules/auth/auth.util';
 import { ITokenPayload } from './auth.interface';
 import { google } from 'googleapis';
+import {
+  ERROR_FIELD_CODE,
+  generateFieldError,
+} from 'src/common/exception.common';
 import { SALT_ROUNDS } from 'src/common/auth.constants';
 import { Authentication, AuthenticationType } from './entities/auth.entity';
 import crypto from 'crypto';
@@ -70,12 +74,22 @@ export class AuthService {
       if (isMatch) {
         // Correct credentials
         // Check if user has been verified
-        const auth: Authentication = await this.authRepository.findOne({user: userFound, type: AuthenticationType.EMAIL_VERIFICATION}); 
-        
+        const auth: Authentication = await this.authRepository.findOne({
+          user: userFound,
+          type: AuthenticationType.EMAIL_VERIFICATION,
+        });
+
+        // if not verified, return user email address and ask user to verify
         if (auth) {
-          throw new HttpException(ErrorMessage.EMAIL_NOT_VERIFIED, HttpStatus.FORBIDDEN);
+          throw new HttpException(
+            {
+              emailAddress: userFound.emailAddress,
+              errMessage: ErrorMessage.EMAIL_NOT_VERIFIED,
+            },
+            HttpStatus.FORBIDDEN,
+          );
         }
-        
+
         // Login successfully! Create JWT token
         const payload: ITokenPayload = {
           sub: userFound.id,
@@ -99,7 +113,7 @@ export class AuthService {
     // else user rejected
     throw new HttpException(
       ErrorMessage.INVALID_CREDENTIALS,
-      HttpStatus.BAD_REQUEST,
+      HttpStatus.UNAUTHORIZED,
     );
   }
 
@@ -158,7 +172,10 @@ export class AuthService {
 
     if (checkUser) {
       throw new HttpException(
-        ErrorMessage.INVALID_EXISTED_USERNAME,
+        generateFieldError(
+          ERROR_FIELD_CODE.USERNAME,
+          ErrorMessage.INVALID_EXISTED_USERNAME,
+        ),
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -184,19 +201,28 @@ export class AuthService {
   // https://oauth.net/2/grant-types/client-credentials/
   async sendVerificationEmail(emailAddress: string) {
     // before sending verification email, always create or update email token first
-    const auth : Authentication = await this.createEmailToken(emailAddress);
+    const auth: Authentication = await this.createEmailToken(emailAddress);
 
     await this.sendEmail({
-      subject: 'Test',
-      text: `I am sending an email from nodemailer!.url: ${this.configService.get<string>('email.emailVerificationUrl')}?token=${auth.token}`,
-      to: 'tnguyen09@qub.ac.uk',
+      subject: 'Verify your email',
+      to: emailAddress,
       from: process.env.EMAIL,
+      html: this.getEmailTemplate(auth.token),
     });
   }
 
   async sendEmail(emailOptions) {
     let emailTransporter = await this.createTransporter();
     await emailTransporter.sendMail(emailOptions);
+  }
+
+  getEmailTemplate(token: string): string {
+    return `<br/><b>Hello</b>, <br/><br/> Please verify your email by clicking the link below. The link expires in 1 hour and can only be used once.<br/><br/> 
+    <a href="${this.configService.get<string>(
+      'email.emailVerificationUrl',
+    )}?token=${token}">Verify Email</a><br/><br/>
+    If you didn’t request this verification and don’t have a Student Bazaar account then please ignore this email.<br/><br/>
+    Team Student Bazaar`;
   }
 
   async createTransporter() {
@@ -213,7 +239,7 @@ export class AuthService {
     return transporter;
   }
 
-  async createEmailToken(emailAddress: string) : Promise<Authentication> {
+  async createEmailToken(emailAddress: string): Promise<Authentication> {
     // check if email address is valid
     const userFound: User = await this.userRepository.findOne({
       emailAddress: emailAddress,
@@ -230,8 +256,8 @@ export class AuthService {
     const emailToken: string = crypto.randomBytes(64).toString('hex');
     // await bcrypt.hash(emailAddress, SALT_ROUNDS);
 
-    const auth : Authentication = await this.em.upsert(Authentication, {
-      token: emailToken, 
+    const auth: Authentication = await this.em.upsert(Authentication, {
+      token: emailToken,
       user: userFound,
       type: AuthenticationType.EMAIL_VERIFICATION,
       expiredAt: new Date(Date.now() + 1000 * 60 * 60), // 1 hour
@@ -241,15 +267,15 @@ export class AuthService {
     return auth;
   }
 
-  async verifyEmail(token: string) : Promise<boolean> {
+  async verifyEmail(token: string): Promise<boolean> {
     // find token in database
-    const auth : Authentication = await this.authRepository.findOne({token: token, type: AuthenticationType.EMAIL_VERIFICATION});
+    const auth: Authentication = await this.authRepository.findOne({
+      token: token,
+      type: AuthenticationType.EMAIL_VERIFICATION,
+    });
 
     if (!auth) {
-      throw new HttpException(
-        ErrorMessage.INVALID_TOKEN,
-        HttpStatus.FORBIDDEN,
-      );
+      throw new HttpException(ErrorMessage.INVALID_TOKEN, HttpStatus.FORBIDDEN);
     }
 
     // delete token

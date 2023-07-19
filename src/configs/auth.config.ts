@@ -6,6 +6,6 @@ export const authConfig = () => ({
     refreshTokenExpire: process.env.REFRESH_TOKEN_EXPIRE,
   },
   email: {
-    emailVerificationUrl: 'http://localhost:3000/auth/email/verify',
+    emailVerificationUrl: `${process.env.VALID_ORIGIN}/signup/email/verify`,
   }
 });

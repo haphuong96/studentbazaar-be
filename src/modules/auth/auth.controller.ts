@@ -19,11 +19,11 @@ export class AuthController {
 
     @Public()
     @Post('signup')
-    async register(@Body() registerUserDto : RegisterUserDto): Promise<void> {
+    async register(@Body() registerUserDto : RegisterUserDto): Promise<User> {
         const newUser : User = await this.authService.registerUser(registerUserDto);
 
         const sent = await this.authService.sendVerificationEmail(newUser.emailAddress);
-        return;
+        return newUser;
     }
 
     @Public()

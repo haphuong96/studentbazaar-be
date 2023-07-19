@@ -1,4 +1,4 @@
-import { SetMetadata } from "@nestjs/common";
+import { SetMetadata } from '@nestjs/common';
 
 // Guard for public routes
 export const IS_PUBLIC_KEY = 'isPublic';
