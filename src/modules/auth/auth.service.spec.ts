@@ -8,7 +8,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { DeepMocked, createMock } from '@golevelup/ts-jest';
 import { Loaded } from '@mikro-orm/core';
 import { MockType } from '../../utils/test.util';
-import { ErrorMessage } from '../../common/messages.common';
+import { ErrorMessage } from '../../common/exceptions/constants.exception';
 
 const validEmail = 'pnguyen09@qub.ac.uk';
 const invalidUniEmail = 'pnguyen09@gmail.com';

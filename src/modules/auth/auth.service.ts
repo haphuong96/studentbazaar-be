@@ -3,22 +3,27 @@ import { University } from '../market/entities/university.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
 import { User } from '../user/entities/user.entity';
-import { ErrorMessage } from '../../common/messages.common';
+import {
+  ErrorCode,
+  ErrorMessage,
+} from '../../common/exceptions/constants.exception';
 import { LoginDto, RegisterUserDto } from './dto/signup.dto';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthUtility } from 'src/modules/auth/auth.util';
-import { ITokenPayload } from './auth.interface';
+import { ILogin, ITokenPayload } from './auth.interface';
 import { google } from 'googleapis';
-import {
-  ERROR_FIELD_CODE,
-  generateFieldError,
-} from 'src/common/exception.common';
 import { SALT_ROUNDS } from 'src/common/auth.constants';
 import { Authentication, AuthenticationType } from './entities/auth.entity';
 import crypto from 'crypto';
+import {
+  CustomBadRequestException,
+  CustomForbiddenException,
+  CustomHttpException,
+  CustomUnauthorizedException,
+} from 'src/common/exceptions/custom.exception';
 
 // TODO:
 // - [ ] Refactor AuthUtility
@@ -81,12 +86,10 @@ export class AuthService {
 
         // if not verified, return user email address and ask user to verify
         if (auth) {
-          throw new HttpException(
-            {
-              emailAddress: userFound.emailAddress,
-              errMessage: ErrorMessage.EMAIL_NOT_VERIFIED,
-            },
-            HttpStatus.FORBIDDEN,
+          throw new CustomForbiddenException(
+            ErrorCode.FORBIDDEN_EMAIL_NOT_VERIFIED,
+            ErrorMessage.EMAIL_NOT_VERIFIED,
+            { emailAddress: userFound.emailAddress },
           );
         }
 
@@ -111,9 +114,9 @@ export class AuthService {
     }
 
     // else user rejected
-    throw new HttpException(
+    throw new CustomUnauthorizedException(
+      ErrorCode.UNAUTHORIZED_LOGIN,
       ErrorMessage.INVALID_CREDENTIALS,
-      HttpStatus.UNAUTHORIZED,
     );
   }
 
@@ -132,9 +135,9 @@ export class AuthService {
     });
 
     if (!university) {
-      throw new HttpException(
+      throw new CustomForbiddenException(
+        ErrorCode.FORBIDDEN_INVALID_UNIVERSITY_EMAIL,
         ErrorMessage.INVALID_UNIVERSITY_EMAIL_ADDRESS_DOMAIN,
-        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -144,9 +147,9 @@ export class AuthService {
     });
 
     if (user) {
-      throw new HttpException(
+      throw new CustomForbiddenException(
+        ErrorCode.FORBIDDEN_INVALID_UNIVERSITY_EMAIL,
         ErrorMessage.INVALID_EXISTED_EMAIL,
-        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -166,17 +169,14 @@ export class AuthService {
     );
 
     // Check if username already existed
-    const checkUser: User = await this.userRepository.findOne({
+    const userFound: User = await this.userRepository.findOne({
       username: newUser.username,
     });
 
-    if (checkUser) {
-      throw new HttpException(
-        generateFieldError(
-          ERROR_FIELD_CODE.USERNAME,
-          ErrorMessage.INVALID_EXISTED_USERNAME,
-        ),
-        HttpStatus.BAD_REQUEST,
+    if (userFound) {
+      throw new CustomForbiddenException(
+        ErrorCode.FORBIDDEN_INVALID_USERNAME,
+        ErrorMessage.INVALID_EXISTED_USERNAME,
       );
     }
     // Hash password
@@ -246,9 +246,9 @@ export class AuthService {
     });
 
     if (!userFound) {
-      throw new HttpException(
+      throw new CustomForbiddenException(
+        ErrorCode.FORBIDDEN_INVALID_USER,
         ErrorMessage.USER_NOT_FOUND,
-        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -275,7 +275,10 @@ export class AuthService {
     });
 
     if (!auth) {
-      throw new HttpException(ErrorMessage.INVALID_TOKEN, HttpStatus.FORBIDDEN);
+      throw new CustomForbiddenException(
+        ErrorCode.FORBIDDEN_INVALID_EMAIL_TOKEN,
+        ErrorMessage.INVALID_TOKEN,
+      );
     }
 
     // delete token
@@ -283,20 +286,31 @@ export class AuthService {
     return true;
   }
 
-  async refreshToken(
-    refreshToken: string,
-  ): Promise<{ accessToken: string; refreshToken: string }> {
+  async refreshToken(refreshToken: string): Promise<ILogin> {
     // Verify refresh token
-    const payload: ITokenPayload = await this.authUtility.verifyToken(
-      refreshToken,
-      this.configService.get<string>('jwtConstants.refreshTokenSecret'),
-    );
-    // const payload = await this.jwtService.verifyAsync(tokens.refreshToken, {
-    //   secret: this.configService.get<string>('jwtConstants.refreshTokenSecret'),
-    // });
-    console.log('payload', payload);
-    // Create new access token
-    return await this.authUtility.generateTokens(payload);
+    try {
+      const payload: ITokenPayload = await this.jwtService.verifyAsync(
+        refreshToken,
+        {
+          secret: this.configService.get<string>(
+            'jwtConstants.refreshTokenSecret',
+          ),
+        },
+      );
+
+      // Create new access token
+      const loginCredentials: ILogin = await this.authUtility.generateTokens(
+        payload,
+      );
+
+      return loginCredentials;
+    } catch (err) {
+      throw new CustomUnauthorizedException(
+        ErrorCode.UNAUTHORIZED_REFRESH_TOKEN,
+        ErrorMessage.UNAUTHORIZED,
+      );
+    }
+
     // return {
     //   accessToken: await this.jwtService.signAsync(payload, {
     //     expiresIn: this.configService.get<string>('jwtConstants.accessTokenExpire'),

@@ -8,7 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { IS_PUBLIC_KEY } from 'src/common/auth.constants';
-import { ErrorMessage } from 'src/common/messages.common';
+import { ErrorCode, ErrorMessage } from 'src/common/exceptions/constants.exception';
+import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
 import { AuthUtility } from 'src/modules/auth/auth.util';
 
 // https://docs.nestjs.com/security/authentication#implementing-the-authentication-guard
@@ -37,7 +38,10 @@ export class AuthGuard implements CanActivate {
 
     const token : string = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new UnauthorizedException(ErrorMessage.UNAUTHORIZED);
+      throw new CustomUnauthorizedException(
+        ErrorCode.UNAUTHORIZED,
+        ErrorMessage.UNAUTHORIZED,
+      );
     }
 
     // try {

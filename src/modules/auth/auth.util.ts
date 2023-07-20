@@ -1,8 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { ErrorMessage } from 'src/common/messages.common';
+import {
+  ErrorCode,
+  ErrorMessage,
+} from 'src/common/exceptions/constants.exception';
 import { ITokenPayload } from './auth.interface';
+import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
 
 @Injectable()
 export class AuthUtility {
@@ -21,7 +25,10 @@ export class AuthUtility {
 
       return payload;
     } catch (err) {
-      throw new UnauthorizedException(ErrorMessage.UNAUTHORIZED);
+      throw new CustomUnauthorizedException(
+        ErrorCode.UNAUTHORIZED,
+        ErrorMessage.UNAUTHORIZED,
+      );
     }
   }
 
