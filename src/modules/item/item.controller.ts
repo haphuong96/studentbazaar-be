@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, Req } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, Req } from "@nestjs/common";
 import { ItemService } from "./item.service";
 import { ITokenPayload } from "../auth/auth.interface";
-import { CreateItemDto } from "./dto/item.dto";
+import { CreateItemDto, SearchItemDto } from "./dto/item.dto";
 import { Item } from "./entities/item.entity";
 
 @Controller()
@@ -18,7 +18,7 @@ export class ItemController {
     }
 
     @Get('items')
-    async getItems(): Promise<Item[]> {
-        return await this.itemService.getItems();
+    async getItems(@Query() query: SearchItemDto): Promise<Item[]> {
+        return await this.itemService.getItems(query);
     }
 }

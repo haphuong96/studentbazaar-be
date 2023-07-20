@@ -5,3 +5,8 @@ export class CreateItemDto {
     conditionId?: number;
     price?: number;
 }
+
+export class SearchItemDto {
+    q?: string;
+    categoryId?: number; 
+}
