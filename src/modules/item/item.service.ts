@@ -46,6 +46,9 @@ export class ItemService {
     
     return await this.itemRepository.find(whereConditions, {
       populate: ['owner', 'category', 'condition'],
+      orderBy: {
+        createdDatetime: 'DESC',
+      }
     });
   }
 }

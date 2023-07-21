@@ -26,14 +26,14 @@ export class AuthUtility {
       return payload;
     } catch (err) {
       throw new CustomUnauthorizedException(
-        ErrorCode.UNAUTHORIZED,
         ErrorMessage.UNAUTHORIZED,
+        ErrorCode.UNAUTHORIZED,
       );
     }
   }
 
   async generateTokens(
-    payload: any,
+    payload: ITokenPayload,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     return {
       accessToken: await this.jwtService.signAsync(payload, {

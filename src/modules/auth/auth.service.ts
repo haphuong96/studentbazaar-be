@@ -87,8 +87,8 @@ export class AuthService {
         // if not verified, return user email address and ask user to verify
         if (auth) {
           throw new CustomForbiddenException(
-            ErrorCode.FORBIDDEN_EMAIL_NOT_VERIFIED,
             ErrorMessage.EMAIL_NOT_VERIFIED,
+            ErrorCode.FORBIDDEN_EMAIL_NOT_VERIFIED,
             { emailAddress: userFound.emailAddress },
           );
         }
@@ -115,8 +115,8 @@ export class AuthService {
 
     // else user rejected
     throw new CustomUnauthorizedException(
-      ErrorCode.UNAUTHORIZED_LOGIN,
       ErrorMessage.INVALID_CREDENTIALS,
+      ErrorCode.UNAUTHORIZED_LOGIN,
     );
   }
 
@@ -136,8 +136,8 @@ export class AuthService {
 
     if (!university) {
       throw new CustomForbiddenException(
-        ErrorCode.FORBIDDEN_INVALID_UNIVERSITY_EMAIL,
         ErrorMessage.INVALID_UNIVERSITY_EMAIL_ADDRESS_DOMAIN,
+        ErrorCode.FORBIDDEN_INVALID_UNIVERSITY_EMAIL,
       );
     }
 
@@ -148,8 +148,8 @@ export class AuthService {
 
     if (user) {
       throw new CustomForbiddenException(
-        ErrorCode.FORBIDDEN_INVALID_UNIVERSITY_EMAIL,
         ErrorMessage.INVALID_EXISTED_EMAIL,
+        ErrorCode.FORBIDDEN_INVALID_UNIVERSITY_EMAIL,
       );
     }
 
@@ -175,8 +175,8 @@ export class AuthService {
 
     if (userFound) {
       throw new CustomForbiddenException(
-        ErrorCode.FORBIDDEN_INVALID_USERNAME,
         ErrorMessage.INVALID_EXISTED_USERNAME,
+        ErrorCode.FORBIDDEN_INVALID_USERNAME,
       );
     }
     // Hash password
@@ -247,8 +247,8 @@ export class AuthService {
 
     if (!userFound) {
       throw new CustomForbiddenException(
-        ErrorCode.FORBIDDEN_INVALID_USER,
         ErrorMessage.USER_NOT_FOUND,
+        ErrorCode.FORBIDDEN_INVALID_USER,
       );
     }
 
@@ -276,8 +276,8 @@ export class AuthService {
 
     if (!auth) {
       throw new CustomForbiddenException(
-        ErrorCode.FORBIDDEN_INVALID_EMAIL_TOKEN,
         ErrorMessage.INVALID_TOKEN,
+        ErrorCode.FORBIDDEN_INVALID_EMAIL_TOKEN,
       );
     }
 
@@ -287,29 +287,31 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<ILogin> {
+    let decoded: any;
+
     // Verify refresh token
     try {
-      const payload: ITokenPayload = await this.jwtService.verifyAsync(
-        refreshToken,
-        {
-          secret: this.configService.get<string>(
-            'jwtConstants.refreshTokenSecret',
-          ),
-        },
-      );
-
-      // Create new access token
-      const loginCredentials: ILogin = await this.authUtility.generateTokens(
-        payload,
-      );
-
-      return loginCredentials;
+      decoded = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.get<string>(
+          'jwtConstants.refreshTokenSecret',
+        ),
+      });
     } catch (err) {
       throw new CustomUnauthorizedException(
-        ErrorCode.UNAUTHORIZED_REFRESH_TOKEN,
         ErrorMessage.UNAUTHORIZED,
+        ErrorCode.UNAUTHORIZED_REFRESH_TOKEN,
       );
     }
+
+    const { sub, username, ...rest } = decoded;
+
+    // Create new access token
+    const loginCredentials: ILogin = await this.authUtility.generateTokens({
+      sub,
+      username,
+    });
+
+    return loginCredentials;
 
     // return {
     //   accessToken: await this.jwtService.signAsync(payload, {
