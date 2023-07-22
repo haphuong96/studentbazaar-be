@@ -22,9 +22,9 @@ export class ItemCategoryService {
     return nestChildrenEntitiesUtil(catsFound);
   }
 
-  async getOneItemCategory(id: number): Promise<ItemCategory> {
+  async getOneItemCategoryByPath(categoryPath: string): Promise<ItemCategory> {
     const catFound: ItemCategory = await this.itemCatRepository.findOneOrFail(
-      id,
+      {path: categoryPath},
       {
         populate: true,
         failHandler: findOneOrFailBadRequestExceptionHandler,

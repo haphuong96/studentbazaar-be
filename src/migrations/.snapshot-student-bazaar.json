@@ -59,6 +59,15 @@
           "length": 255,
           "mappedType": "string"
         },
+        "path": {
+          "name": "path",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "string"
+        },
         "parent_id": {
           "name": "parent_id",
           "type": "int",
@@ -79,6 +88,15 @@
           "keyName": "item_category_parent_id_index",
           "primary": false,
           "unique": false
+        },
+        {
+          "keyName": "item_category_path_unique",
+          "columnNames": [
+            "path"
+          ],
+          "composite": false,
+          "primary": false,
+          "unique": true
         },
         {
           "keyName": "PRIMARY",

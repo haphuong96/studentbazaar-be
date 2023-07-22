@@ -15,8 +15,8 @@ export class ItemCategoryController {
         return result;
     }
 
-    @Get(':id')
-    async getOneItemCategory(@Param('id') id: number): Promise<ItemCategory> {
-        return await this.itemCatService.getOneItemCategory(id);
+    @Get(':categoryPath')
+    async getOneItemCategoryByPath(@Param('categoryPath') categoryPath: string): Promise<ItemCategory> {
+        return await this.itemCatService.getOneItemCategoryByPath(categoryPath);
     }
 }
