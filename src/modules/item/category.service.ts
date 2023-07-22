@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
-
+import { wrap } from '@mikro-orm/core';
 import { ItemCategory } from './entities/category.entity';
 import { nestChildrenEntitiesUtil } from 'src/utils/nest-children-entities.util';
 import { CustomBadRequestException } from 'src/common/exceptions/custom.exception';
@@ -23,9 +23,20 @@ export class ItemCategoryService {
   }
 
   async getOneItemCategory(id: number): Promise<ItemCategory> {
-    return await this.itemCatRepository.findOneOrFail(id, {
-      populate: ['parent'],
-      failHandler: findOneOrFailBadRequestExceptionHandler,
+    const catFound: ItemCategory = await this.itemCatRepository.findOneOrFail(
+      id,
+      {
+        populate: true,
+        failHandler: findOneOrFailBadRequestExceptionHandler,
+      },
+    );
+
+    const catFoundChildren: ItemCategory[] = await this.itemCatRepository.find({
+      parent: catFound,
     });
+
+    wrap(catFound).assign({ children: catFoundChildren });
+
+    return catFound;
   }
 }

@@ -10,7 +10,9 @@ export class ItemCategoryController {
 
     @Get()
     async getAllItemCategories(): Promise<ItemCategory[]> {
-        return await this.itemCatService.getAllItemCategories();
+        const result =  await this.itemCatService.getAllItemCategories();
+        console.log(result);
+        return result;
     }
 
     @Get(':id')

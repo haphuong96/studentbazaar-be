@@ -19,9 +19,6 @@ export class ItemCategory implements RecursiveRelationEntity<ItemCategory> {
   @ManyToOne()
   parent?: ItemCategory;
 
-  @OneToMany({ mappedBy: 'category' })
-  item?: Item;
-
   @Property({ persist: false })
   children: ItemCategory[];
 
