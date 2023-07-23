@@ -43,6 +43,12 @@ export class ItemService {
         ],
       });
     }
+
+    if (query.q) {
+      whereConditions.$and.push({
+        itemName: { $like: `%${query.q}%` },
+      });
+    }
     
     return await this.itemRepository.find(whereConditions, {
       populate: ['owner', 'category', 'condition'],
