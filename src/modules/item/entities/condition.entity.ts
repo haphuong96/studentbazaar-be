@@ -13,7 +13,4 @@ export class ItemCondition {
 
   @Property({ length: 255 })
   conditionName!: string;
-
-  @OneToMany({ mappedBy: 'condition' })
-  item?: Item;
 }

@@ -20,9 +20,6 @@ export class User {
   @ManyToOne()
   campus?: CampusLocation;
 
-  @OneToMany({ mappedBy: 'owner' })
-  item?: Item;
-
   @Property({ length: 255 })
   fullname?: string;
 

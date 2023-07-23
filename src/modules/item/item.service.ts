@@ -7,6 +7,7 @@ import { User } from '../user/entities/user.entity';
 import { ItemCategory } from './entities/category.entity';
 import { ItemCondition } from './entities/condition.entity';
 import { FilterQuery, FindOptions } from '@mikro-orm/core';
+import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
 
 @Injectable()
 export class ItemService {
@@ -49,12 +50,19 @@ export class ItemService {
         itemName: { $like: `%${query.q}%` },
       });
     }
-    
+
     return await this.itemRepository.find(whereConditions, {
       populate: ['owner', 'category', 'condition'],
       orderBy: {
         createdDatetime: 'DESC',
-      }
+      },
+    });
+  }
+
+  async getOneItem(id: number): Promise<Item> {
+    return await this.itemRepository.findOneOrFail(id, {
+      populate: true,
+      failHandler: findOneOrFailBadRequestExceptionHandler,
     });
   }
 }

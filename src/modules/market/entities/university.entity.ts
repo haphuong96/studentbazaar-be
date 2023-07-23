@@ -23,9 +23,6 @@ export class University {
   @ManyToMany( { pivotTable: 'university_campus'})
   campuses = new Collection<CampusLocation>(this);
 
-  @OneToMany({ mappedBy: 'university' })
-  user?: User;
-
   constructor(id: number, universityName: string, emailAddressDomain: string) {
     this.id = id;
     this.universityName = universityName;

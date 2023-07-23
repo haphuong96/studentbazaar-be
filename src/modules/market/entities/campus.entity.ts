@@ -19,7 +19,4 @@ export class CampusLocation {
 
   @ManyToMany({ mappedBy: 'campuses' })
   universities = new Collection<University>(this);
-
-  @OneToMany({ mappedBy: 'campus' })
-  user?: User;
 }
