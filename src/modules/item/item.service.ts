@@ -8,6 +8,10 @@ import { ItemCategory } from './entities/category.entity';
 import { ItemCondition } from './entities/condition.entity';
 import { FilterQuery, FindOptions } from '@mikro-orm/core';
 import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
+import { BlobServiceClient } from '@azure/storage-blob';
+import { DefaultAzureCredential } from '@azure/identity';
+import { randomUUID } from 'crypto';
+import { ItemImage } from './entities/image.entity';
 
 @Injectable()
 export class ItemService {
@@ -29,6 +33,14 @@ export class ItemService {
       itemPrice: item.price,
     });
 
+    item.img.forEach((imgUrl) => {
+      itemCreate.img.add(
+        this.em.create(ItemImage, {
+          imgPath: imgUrl,
+        }),
+      );
+    });
+    
     await this.em.persistAndFlush(itemCreate);
   }
 
@@ -64,5 +76,30 @@ export class ItemService {
       populate: true,
       failHandler: findOneOrFailBadRequestExceptionHandler,
     });
+  }
+
+  async uploadItemImage(files: Array<Express.Multer.File>): Promise<string[]> {
+    const imageUrls: string[] = [];
+
+    const blobServiceClient = new BlobServiceClient(
+      `https://${process.env.AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net`,
+      new DefaultAzureCredential(),
+    );
+
+    const containerName = 'item-images';
+
+    const containerClient = blobServiceClient.getContainerClient(containerName);
+
+    files.forEach(async (file) => {
+      const blockBlobClient = containerClient.getBlockBlobClient(
+        file.originalname + '_' + randomUUID(),
+      );
+
+      const options = { blobHTTPHeaders: { blobContentType: file.mimetype } };
+      blockBlobClient.uploadData(file.buffer, options);
+      imageUrls.push(blockBlobClient.url);
+    });
+
+    return imageUrls;
   }
 }

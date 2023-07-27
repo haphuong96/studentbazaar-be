@@ -4,6 +4,7 @@ export class CreateItemDto {
     categoryId: number;
     conditionId?: number;
     price?: number;
+    img: string[];
 }
 
 export class SearchItemDto {

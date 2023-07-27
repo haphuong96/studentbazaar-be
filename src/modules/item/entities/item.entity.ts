@@ -6,6 +6,7 @@ import {
   Property,
   OneToMany,
   Enum,
+  Collection
 } from '@mikro-orm/core';
 import { User } from '../../user/entities/user.entity';
 import { ItemCategory } from './category.entity';
@@ -30,7 +31,7 @@ export class Item {
   status!: ItemStatus;
 
   @OneToMany({ mappedBy: 'item' })
-  img?: ItemImage;
+  img? = new Collection<ItemImage>(this);
 
   @Property({ length: 255 })
   itemName!: string;

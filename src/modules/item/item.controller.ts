@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Post, Query, Req, Param } from "@nestjs/common";
+import { Body, Controller, Get, Post, Query, Req, Param, UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { ItemService } from "./item.service";
 import { ITokenPayload } from "../auth/auth.interface";
 import { CreateItemDto, SearchItemDto } from "./dto/item.dto";
 import { Item } from "./entities/item.entity";
+import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
 
 @Controller('items')
 export class ItemController {
@@ -26,4 +27,12 @@ export class ItemController {
     async getOneItem(@Param('id') id: number): Promise<Item> {
         return await this.itemService.getOneItem(id);
     }
+
+    @Post('images')
+    @UseInterceptors(FilesInterceptor('files'))
+    async uploadItemImage(@UploadedFiles() files: Array<Express.Multer.File>): Promise<{imgUrls: string[]}> {
+        return {imgUrls: await this.itemService.uploadItemImage(files)};
+    }
+
+
 }
