@@ -430,6 +430,82 @@
           "nullable": false,
           "mappedType": "integer"
         },
+        "user_id": {
+          "name": "user_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "string"
+        }
+      },
+      "name": "refresh_token",
+      "indexes": [
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "keyName": "refresh_token_user_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "refresh_token_user_id_unique",
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "primary": false,
+          "unique": true
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "refresh_token_user_id_foreign": {
+          "constraintName": "refresh_token_user_id_foreign",
+          "columnNames": [
+            "user_id"
+          ],
+          "localTableName": "refresh_token",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "user",
+          "updateRule": "cascade"
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
         "owner_id": {
           "name": "owner_id",
           "type": "int",
@@ -723,19 +799,19 @@
           "mappedType": "enum"
         }
       },
-      "name": "authentication",
+      "name": "email_verification",
       "indexes": [
         {
           "columnNames": [
             "user_id"
           ],
           "composite": false,
-          "keyName": "authentication_user_id_index",
+          "keyName": "email_verification_user_id_index",
           "primary": false,
           "unique": false
         },
         {
-          "keyName": "authentication_user_id_type_unique",
+          "keyName": "email_verification_user_id_type_unique",
           "columnNames": [
             "user_id",
             "type"
@@ -756,12 +832,12 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "authentication_user_id_foreign": {
-          "constraintName": "authentication_user_id_foreign",
+        "email_verification_user_id_foreign": {
+          "constraintName": "email_verification_user_id_foreign",
           "columnNames": [
             "user_id"
           ],
-          "localTableName": "authentication",
+          "localTableName": "email_verification",
           "referencedColumnNames": [
             "id"
           ],

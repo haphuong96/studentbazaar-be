@@ -8,11 +8,10 @@ import {
   Enum,
 } from '@mikro-orm/core';
 import { User } from '../../user/entities/user.entity';
-// import { AuthenticationType } from './type.entity';
 
 @Entity()
 @Unique({ properties: ['user', 'type'] })
-export class Authentication {
+export class EmailVerification {
   @PrimaryKey()
   id!: number;
 

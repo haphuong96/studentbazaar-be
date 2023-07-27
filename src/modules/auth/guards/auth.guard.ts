@@ -1,42 +1,36 @@
-import {
-  CanActivate,
-  Injectable,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { CanActivate, Injectable, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
 import { IS_PUBLIC_KEY } from 'src/common/auth.constants';
-import { ErrorCode, ErrorMessage } from 'src/common/exceptions/constants.exception';
+import {
+  ErrorCode,
+  ErrorMessage,
+} from 'src/common/exceptions/constants.exception';
 import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
-import { AuthUtility } from 'src/modules/auth/auth.util';
+import { JWTTokensUtility } from 'src/modules/auth/utils/jwt-token.util';
 
 // https://docs.nestjs.com/security/authentication#implementing-the-authentication-guard
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    // private jwtService: JwtService,
-    private authUtility: AuthUtility,
-    private configService: ConfigService,
+    private jwtTokensUtility: JWTTokensUtility,
     private reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Check if it is a public endpoint
-    const isPublic : boolean = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isPublic: boolean = this.reflector.getAllAndOverride<boolean>(
+      IS_PUBLIC_KEY,
+      [context.getHandler(), context.getClass()],
+    );
     // if it is, allow access
     if (isPublic) {
       return true;
     }
 
     // else, check if the request has a valid token
-    const request : Request = context.switchToHttp().getRequest<Request>();
+    const request: Request = context.switchToHttp().getRequest<Request>();
 
-    const token : string = this.extractTokenFromHeader(request);
+    const token: string = this.extractTokenFromHeader(request);
     if (!token) {
       throw new CustomUnauthorizedException(
         ErrorMessage.UNAUTHORIZED,
@@ -44,19 +38,8 @@ export class AuthGuard implements CanActivate {
       );
     }
 
-    // try {
-    //   const payload = await this.jwtService.verifyAsync(token, {
-    //     secret: this.configService.get<string>(
-    //       'jwtConstants.accessTokenSecret',
-    //     ),
-    //   });
-
-    //   request['user'] = payload;
-    // } catch {
-    //   throw new UnauthorizedException(ErrorMessage.UNAUTHORIZED);
-    // }
-    request['user'] = await this.authUtility.verifyToken(token, this.configService.get<string>('jwtConstants.accessTokenSecret',
-        ));
+    // verify token. If valid, assign decoded user to request. Else, throw error
+    request['user'] = await this.jwtTokensUtility.verifyAccessToken(token);
 
     return true;
   }

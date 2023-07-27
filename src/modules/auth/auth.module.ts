@@ -7,25 +7,30 @@ import { University } from '../market/entities/university.entity';
 import { JwtModule } from '@nestjs/jwt/dist';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './guards/auth.guard';
-import { AuthUtility } from 'src/modules/auth/auth.util';
-import { Authentication } from './entities/auth.entity';
+import { EmailVerification } from './entities/email-verification.entity';
+import { JWTTokensUtility } from './utils/jwt-token.util';
+import { EmailModule } from '../email/email.module';
+import { RefreshToken } from './entities/refresh-token.entity';
+import { UserModule } from '../user/user.module';
 
 @Module({
   controllers: [AuthController],
   providers: [
     AuthService,
-    AuthUtility,
+    JWTTokensUtility,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
   ],
   imports: [
-    MikroOrmModule.forFeature([User, University, Authentication]),
+    MikroOrmModule.forFeature([University, EmailVerification, RefreshToken]),
     // https://github.com/nestjs/jwt/blob/master/README.md
     JwtModule.register({
       global: true,
     }),
+    EmailModule,
+    UserModule
   ],
 })
 export class AuthModule {}
