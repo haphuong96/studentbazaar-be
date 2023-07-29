@@ -49,6 +49,42 @@
           "nullable": false,
           "mappedType": "integer"
         },
+        "img_path": {
+          "name": "img_path",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "text"
+        }
+      },
+      "name": "image",
+      "indexes": [
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
         "category_name": {
           "name": "category_name",
           "type": "varchar(255)",
@@ -690,14 +726,14 @@
           "nullable": false,
           "mappedType": "integer"
         },
-        "img_path": {
-          "name": "img_path",
-          "type": "text",
-          "unsigned": false,
+        "image_id": {
+          "name": "image_id",
+          "type": "int",
+          "unsigned": true,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "text"
+          "mappedType": "integer"
         },
         "item_id": {
           "name": "item_id",
@@ -711,6 +747,15 @@
       },
       "name": "item_image",
       "indexes": [
+        {
+          "columnNames": [
+            "image_id"
+          ],
+          "composite": false,
+          "keyName": "item_image_image_id_unique",
+          "primary": false,
+          "unique": true
+        },
         {
           "columnNames": [
             "item_id"
@@ -732,6 +777,18 @@
       ],
       "checks": [],
       "foreignKeys": {
+        "item_image_image_id_foreign": {
+          "constraintName": "item_image_image_id_foreign",
+          "columnNames": [
+            "image_id"
+          ],
+          "localTableName": "item_image",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "image",
+          "updateRule": "cascade"
+        },
         "item_image_item_id_foreign": {
           "constraintName": "item_image_item_id_foreign",
           "columnNames": [

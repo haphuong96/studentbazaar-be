@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Item, ItemStatus } from './entities/item.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
@@ -6,26 +6,15 @@ import { CreateItemDto, SearchItemDto } from './dto/item.dto';
 import { User } from '../user/entities/user.entity';
 import { ItemCategory } from './entities/category.entity';
 import { ItemCondition } from './entities/condition.entity';
-import { FilterQuery, FindOptions } from '@mikro-orm/core';
+import { FilterQuery } from '@mikro-orm/core';
 import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
-import {
-  BlobServiceClient,
-  BlobUploadCommonResponse,
-  BlockBlobClient,
-  ContainerClient,
-} from '@azure/storage-blob';
-import { DefaultAzureCredential } from '@azure/identity';
-import { randomUUID } from 'crypto';
-import { ItemImage } from './entities/image.entity';
+import { BlockBlobClient } from '@azure/storage-blob';
+import { ItemImage } from './entities/item-image.entity';
 import { UserService } from '../user/user.service';
 import { ItemCategoryService } from './category.service';
 import { ItemConditionService } from './condition.service';
-import { ImageBlockBlobClientService } from '../azure-blob-storage/img-block-blob-client.service';
-import { CustomHttpException } from 'src/common/exceptions/custom.exception';
-import {
-  ErrorCode,
-  ErrorMessage,
-} from 'src/common/exceptions/constants.exception';
+import { ImageContainerClientService } from '../azure-blob-storage/img-container-client.service';
+import { Image } from '../img/image.entity';
 
 @Injectable()
 export class ItemService {
@@ -41,7 +30,7 @@ export class ItemService {
 
     private readonly em: EntityManager,
 
-    private imgBlockBlobClientService: ImageBlockBlobClientService,
+    private imgContainerClientService: ImageContainerClientService,
   ) {}
 
   /**
@@ -68,10 +57,10 @@ export class ItemService {
       itemPrice: item.price,
     });
 
-    item.img.forEach((imgUrl) => {
+    item.img.forEach((image: Image) => {
       itemCreate.img.add(
         this.em.create(ItemImage, {
-          imgPath: imgUrl,
+          image: image,
         }),
       );
     });
@@ -99,7 +88,7 @@ export class ItemService {
     }
 
     return await this.itemRepository.find(whereConditions, {
-      populate: ['owner', 'category', 'condition', 'img'],
+      populate: ['owner', 'category', 'condition', 'img.image'],
       orderBy: {
         createdDatetime: 'DESC',
       },
@@ -113,23 +102,32 @@ export class ItemService {
     });
   }
 
-  async uploadItemImage(files: Array<Express.Multer.File>): Promise<string[]> {
-    const uploadTasks = files.map(async (file) => {
+  async uploadItemImage(files: Array<Express.Multer.File>): Promise<Image[]> {
+    const uploadTasks: Promise<Image>[] = files.map(async (file) => {
       const blockBlobClient: BlockBlobClient =
-        this.imgBlockBlobClientService.getBlockBlobClient(file.originalname);
+        this.imgContainerClientService.getBlockBlobClient(file.originalname);
       try {
         const result = await blockBlobClient.uploadData(file.buffer, {
           blobHTTPHeaders: {
             blobContentType: file.mimetype,
           },
         });
-        return result._response.request.url;
+
+        // create image entities to store in database
+        return this.em.create(Image, { imgPath: result._response.request.url });
       } catch (error) {
         console.log(error);
-        return '';
+        return;
       }
     });
-    const imageUrls: string[] = await Promise.all(uploadTasks);
-    return imageUrls;
+
+    // Retrieve successfully uploaded images
+    const images: Image[] = (await Promise.all(uploadTasks)).filter(
+      (image: Image) => image,
+    );
+
+    this.em.persistAndFlush(images);
+
+    return images;
   }
 }

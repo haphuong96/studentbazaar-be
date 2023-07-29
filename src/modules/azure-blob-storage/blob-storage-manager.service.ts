@@ -3,6 +3,12 @@ import { BlobServiceClient, ContainerClient } from '@azure/storage-blob';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+
+/**
+ * https://learn.microsoft.com/en-us/azure/storage/blobs/storage-quickstart-blobs-nodejs?tabs=managed-identity%2Croles-azure-portal%2Csign-in-azure-cli
+ * 
+ * A class that encapsulates Azure BlobServiceClient and instantiate container clients
+ */
 @Injectable()
 export class AzureBlobStorageManagerService {
   private blobServiceClient: BlobServiceClient;
@@ -18,6 +24,9 @@ export class AzureBlobStorageManagerService {
     this.setContainerClients();
   }
 
+  /**
+   * Instantiate container clients
+   */
   private setContainerClients() {
     const map: Map<string, ContainerClient> = new Map<
       string,

@@ -5,22 +5,22 @@ import { ConfigService } from '@nestjs/config';
 import { ContainerClient } from '@azure/storage-blob';
 
 @Injectable()
-export class ImageBlockBlobClientService {
+export class ImageContainerClientService {
   constructor(
     private configService: ConfigService,
     private blobStorageManager: AzureBlobStorageManagerService,
   ) {}
 
-  getBlockBlobClient(blobName: string) {
+  getBlockBlobClient(imgName: string) {
     const containerClient: ContainerClient =
       this.blobStorageManager.getContainerClient(
         this.configService.get<string>('azureBlobStorage.imageContainerName'),
       );
 
-    if (containerClient.containerName === 'undefined') {
+    if (!containerClient) {
       throw new Error('Container client is undefined');
     }
 
-    return containerClient.getBlockBlobClient(blobName + '_' + randomUUID());
+    return containerClient.getBlockBlobClient(imgName + '_' + randomUUID());
   }
 }

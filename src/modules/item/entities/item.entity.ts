@@ -11,7 +11,7 @@ import {
 import { User } from '../../user/entities/user.entity';
 import { ItemCategory } from './category.entity';
 import { ItemCondition } from './condition.entity';
-import { ItemImage } from './image.entity';
+import { ItemImage } from './item-image.entity';
 
 @Entity()
 export class Item {

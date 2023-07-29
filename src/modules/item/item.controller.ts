@@ -4,6 +4,7 @@ import { ITokenPayload } from "../auth/auth.interface";
 import { CreateItemDto, SearchItemDto } from "./dto/item.dto";
 import { Item } from "./entities/item.entity";
 import { FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
+import { Image } from "../img/image.entity";
 
 @Controller('items')
 export class ItemController {
@@ -30,8 +31,8 @@ export class ItemController {
 
     @Post('images')
     @UseInterceptors(FilesInterceptor('files'))
-    async uploadItemImage(@UploadedFiles() files: Array<Express.Multer.File>): Promise<{imgUrls: string[]}> {
-        return {imgUrls: await this.itemService.uploadItemImage(files)};
+    async uploadItemImage(@UploadedFiles() files: Array<Express.Multer.File>): Promise<Image[]> {
+        return await this.itemService.uploadItemImage(files);
     }
 
 
