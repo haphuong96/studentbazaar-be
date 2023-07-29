@@ -1,15 +1,15 @@
 import { Module } from '@nestjs/common';
-import { PJAzureBlobServiceClient } from './blob-service-client';
 import { ImageBlockBlobClientService } from './img-block-blob-client.service';
+import { AzureBlobStorageManagerService } from './blob-storage-manager.service';
 
 @Module({
   providers: [
-    PJAzureBlobServiceClient,
     ImageBlockBlobClientService,
+    AzureBlobStorageManagerService
   ],
   exports: [
-    PJAzureBlobServiceClient,
     ImageBlockBlobClientService,
+    AzureBlobStorageManagerService
   ]
 })
 export class AzureBlobStorageClientModule {}

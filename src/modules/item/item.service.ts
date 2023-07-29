@@ -114,31 +114,22 @@ export class ItemService {
   }
 
   async uploadItemImage(files: Array<Express.Multer.File>): Promise<string[]> {
-    const imageUrls: string[] = [];
-
-    files.forEach(async (file: Express.Multer.File) => {
+    const uploadTasks = files.map(async (file) => {
       const blockBlobClient: BlockBlobClient =
         this.imgBlockBlobClientService.getBlockBlobClient(file.originalname);
-
-      blockBlobClient
-        .uploadData(file.buffer, {
+      try {
+        const result = await blockBlobClient.uploadData(file.buffer, {
           blobHTTPHeaders: {
             blobContentType: file.mimetype,
           },
-        })
-        .then((res: BlobUploadCommonResponse) => {
-          imageUrls.push(res._response.request.url);
-        })
-        .catch((err: any) => {
-          console.log(err);
-          throw new CustomHttpException(
-            ErrorMessage.ERROR_UPLOAD_IMAGE,
-            HttpStatus.INTERNAL_SERVER_ERROR,
-            ErrorCode.INTERNAL_SERVER_ERROR_UPLOAD_IMAGE,
-          );
         });
+        return result._response.request.url;
+      } catch (error) {
+        console.log(error);
+        return '';
+      }
     });
-
+    const imageUrls: string[] = await Promise.all(uploadTasks);
     return imageUrls;
   }
 }
