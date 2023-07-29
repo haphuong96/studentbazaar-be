@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Param, Query, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, Req } from '@nestjs/common';
 import { University } from '../market/entities/university.entity';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterUserDto } from './dto/signup.dto';
 import { Public } from 'src/common/auth.constants';
 import { User } from '../user/entities/user.entity';
+import { ITokenPayload, RequestWithUser } from './auth.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -55,4 +56,10 @@ export class AuthController {
     @Get('test')
     test(): string { return 'test'; };
 
+    @Post('logout')
+    async logout(@Req() request: RequestWithUser): Promise<void> {
+        const user: ITokenPayload = request.user;
+
+        return this.authService.deleteRefreshToken(user.sub);
+    }
 }

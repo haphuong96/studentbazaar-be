@@ -1,4 +1,4 @@
-export const authConfig = () => ({
+export default () => ({
   jwtConstants: {
     accessTokenSecret: process.env.ACCESS_TOKEN_KEY,
     refreshTokenSecret: process.env.REFRESH_TOKEN_KEY,
@@ -7,5 +7,9 @@ export const authConfig = () => ({
   },
   email: {
     emailVerificationUrl: `${process.env.VALID_ORIGIN}/signup/email/verify`,
+  },
+  azureBlobStorage: {
+    storageAccountName: process.env.AZURE_STORAGE_ACCOUNT_NAME,
+    imageContainerName: process.env.AZURE_STORAGE_IMAGE_CONTAINER_NAME,
   }
 });

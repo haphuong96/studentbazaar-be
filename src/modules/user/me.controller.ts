@@ -1,21 +1,18 @@
 import { Controller, Get, Post, Param, Query, Body, Req } from '@nestjs/common';
 import { Public } from 'src/common/auth.constants';
 import { User } from '../user/entities/user.entity';
-import { ITokenPayload } from '../auth/auth.interface';
+import { ITokenPayload, RequestWithUser } from '../auth/auth.interface';
 import { MeService } from './me.service';
+import { UserService } from './user.service';
 
 @Controller('me')
 export class MeController {
-    constructor(
-        private meService: MeService
-    ){}
-    
-    @Get('profile')
-    async getMyProfile(@Req() request: Request): Promise<User> {
-        const user : ITokenPayload = request['user'];
+  constructor(private userService: UserService) {}
 
-        return this.meService.getMyProfile(user);    
-    }
+  @Get('profile')
+  async getMyProfile(@Req() request: RequestWithUser): Promise<User> {
+    const user: ITokenPayload = request.user;
 
-
+    return this.userService.getUserById(user.sub);
+  }
 }

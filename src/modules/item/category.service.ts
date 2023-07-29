@@ -5,7 +5,7 @@ import { FilterQuery, wrap } from '@mikro-orm/core';
 import { ItemCategory } from './entities/category.entity';
 import { nestChildrenEntitiesUtil } from 'src/utils/nest-children-entities.util';
 import { CustomBadRequestException } from 'src/common/exceptions/custom.exception';
-import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
+import { findOneOrFailBadRequestExceptionHandler, findOneOrFailNotFoundExceptionHandler } from 'src/utils/exception-handler.util';
 
 @Injectable()
 export class ItemCategoryService {
@@ -41,6 +41,12 @@ export class ItemCategoryService {
     wrap(catFound).assign({ children: catFoundChildren });
 
     return catFound;
+  }
+
+  async getOneItemCategoryById(id: number): Promise<ItemCategory> {
+    return await this.itemCatRepository.findOneOrFail(id, {
+      failHandler: findOneOrFailNotFoundExceptionHandler,
+    });
   }
 
 }

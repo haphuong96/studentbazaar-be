@@ -8,10 +8,24 @@ import { ItemCategory } from './entities/category.entity';
 import { ItemCondition } from './entities/condition.entity';
 import { FilterQuery, FindOptions } from '@mikro-orm/core';
 import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
-import { BlobServiceClient } from '@azure/storage-blob';
+import {
+  BlobServiceClient,
+  BlobUploadCommonResponse,
+  BlockBlobClient,
+  ContainerClient,
+} from '@azure/storage-blob';
 import { DefaultAzureCredential } from '@azure/identity';
 import { randomUUID } from 'crypto';
 import { ItemImage } from './entities/image.entity';
+import { UserService } from '../user/user.service';
+import { ItemCategoryService } from './category.service';
+import { ItemConditionService } from './condition.service';
+import { ImageBlockBlobClientService } from '../azure-blob-storage/img-block-blob-client.service';
+import { CustomHttpException } from 'src/common/exceptions/custom.exception';
+import {
+  ErrorCode,
+  ErrorMessage,
+} from 'src/common/exceptions/constants.exception';
 
 @Injectable()
 export class ItemService {
@@ -19,14 +33,35 @@ export class ItemService {
     @InjectRepository(Item)
     private readonly itemRepository: EntityRepository<Item>,
 
+    private itemCatService: ItemCategoryService,
+
+    private itemConditionService: ItemConditionService,
+
+    private userService: UserService,
+
     private readonly em: EntityManager,
+
+    private imgBlockBlobClientService: ImageBlockBlobClientService,
   ) {}
 
+  /**
+   *
+   * @param item
+   * @param userId
+   */
   async createItem(item: CreateItemDto, userId: number): Promise<void> {
+    const owner: User = await this.userService.getUserById(userId);
+
+    const category: ItemCategory =
+      await this.itemCatService.getOneItemCategoryById(item.categoryId);
+
+    const condition: ItemCondition =
+      await this.itemConditionService.getOneItemConditionById(item.conditionId);
+
     const itemCreate: Item = this.itemRepository.create({
-      owner: this.em.getReference(User, userId),
-      category: this.em.getReference(ItemCategory, item.categoryId),
-      condition: this.em.getReference(ItemCondition, item.conditionId),
+      owner,
+      category,
+      condition,
       status: ItemStatus.PUBLISHED,
       itemName: item.itemName,
       itemDescription: item.itemDescription,
@@ -40,7 +75,7 @@ export class ItemService {
         }),
       );
     });
-    
+
     await this.em.persistAndFlush(itemCreate);
   }
 
@@ -64,7 +99,7 @@ export class ItemService {
     }
 
     return await this.itemRepository.find(whereConditions, {
-      populate: ['owner', 'category', 'condition'],
+      populate: ['owner', 'category', 'condition', 'img'],
       orderBy: {
         createdDatetime: 'DESC',
       },
@@ -81,23 +116,27 @@ export class ItemService {
   async uploadItemImage(files: Array<Express.Multer.File>): Promise<string[]> {
     const imageUrls: string[] = [];
 
-    const blobServiceClient = new BlobServiceClient(
-      `https://${process.env.AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net`,
-      new DefaultAzureCredential(),
-    );
+    files.forEach(async (file: Express.Multer.File) => {
+      const blockBlobClient: BlockBlobClient =
+        this.imgBlockBlobClientService.getBlockBlobClient(file.originalname);
 
-    const containerName = 'item-images';
-
-    const containerClient = blobServiceClient.getContainerClient(containerName);
-
-    files.forEach(async (file) => {
-      const blockBlobClient = containerClient.getBlockBlobClient(
-        file.originalname + '_' + randomUUID(),
-      );
-
-      const options = { blobHTTPHeaders: { blobContentType: file.mimetype } };
-      blockBlobClient.uploadData(file.buffer, options);
-      imageUrls.push(blockBlobClient.url);
+      blockBlobClient
+        .uploadData(file.buffer, {
+          blobHTTPHeaders: {
+            blobContentType: file.mimetype,
+          },
+        })
+        .then((res: BlobUploadCommonResponse) => {
+          imageUrls.push(res._response.request.url);
+        })
+        .catch((err: any) => {
+          console.log(err);
+          throw new CustomHttpException(
+            ErrorMessage.ERROR_UPLOAD_IMAGE,
+            HttpStatus.INTERNAL_SERVER_ERROR,
+            ErrorCode.INTERNAL_SERVER_ERROR_UPLOAD_IMAGE,
+          );
+        });
     });
 
     return imageUrls;

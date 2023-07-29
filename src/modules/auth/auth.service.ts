@@ -250,6 +250,7 @@ export class AuthService {
   }
 
   /**
+   * https://www.oauth.com/oauth2-servers/making-authenticated-requests/refreshing-an-access-token/
    * When access token is expired, client will send a request to refresh access token.
    *
    * Check the validity of refresh token. The refresh token should be decoded successfully, which means it is a valid JWT token not yet expired.
@@ -292,6 +293,8 @@ export class AuthService {
 
         return { accessToken, refreshToken };
       }
+
+      //TODO: Revoke all refresh tokens of user, if refresh token was used twice
     }
 
     // throw error otherwise
@@ -299,5 +302,16 @@ export class AuthService {
       ErrorMessage.UNAUTHORIZED,
       ErrorCode.UNAUTHORIZED_REFRESH_TOKEN,
     );
+  }
+
+  async deleteRefreshToken(userId: number): Promise<void> {
+    // Find refresh token by user/client
+    const user: RefreshToken = await this.refreshTokenRepository.findOne({
+      user: this.em.getReference(User, userId),
+    });
+
+    if (user) {
+      await this.em.removeAndFlush(user);
+    }
   }
 }
