@@ -9,5 +9,5 @@ export interface ILogin {
 }
 
 export interface RequestWithUser {
-    user: ITokenPayload;
+  user: ITokenPayload;
 }

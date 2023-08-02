@@ -5,8 +5,8 @@ import { ConfigService } from '@nestjs/config';
 export class EmailTemplate {
   constructor(private configService: ConfigService) {}
 
-  getAccountVerificationEmailTemplate(token: string): string {
-    return `<br/><b>Hello</b>, <br/><br/> Please verify your email by clicking the link below. The link expires in 1 hour and can only be used once.<br/><br/> 
+  getAccountVerificationEmailTemplate(token: string, username?: string): string {
+    return `<br/><b>Hi${' '+ username}</b>, <br/><br/> Please verify your email by clicking the link below. The link expires in 1 hour and can only be used once.<br/><br/> 
     <a href="${this.configService.get<string>(
       'email.emailVerificationUrl',
     )}?token=${token}">Verify Email</a><br/><br/>

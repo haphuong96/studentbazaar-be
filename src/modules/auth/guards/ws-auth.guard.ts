@@ -14,51 +14,40 @@ import { CustomUnauthorizedException } from 'src/common/exceptions/custom.except
 import { JWTTokensUtility } from 'src/modules/auth/utils/jwt-token.util';
 import { WsException } from '@nestjs/websockets';
 import { ITokenPayload } from '../auth.interface';
+import { Socket } from 'socket.io';
+import { IncomingHttpHeaders } from 'http';
 
 // https://docs.nestjs.com/security/authentication#implementing-the-authentication-guard
 @Injectable()
-export class JwtAuthGuard implements CanActivate {
+export class WsJwtAuthGuard implements CanActivate {
   constructor(
     private jwtTokensUtility: JWTTokensUtility,
     private reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Check if it is a public endpoint
-    const isPublic: boolean = this.reflector.getAllAndOverride<boolean>(
-      IS_PUBLIC_KEY,
-      [context.getHandler(), context.getClass()],
-    );
-    // if it is, allow access
-    if (isPublic) {
-      return true;
-    }
-
-    // else, check if the request has a valid token
-    const request: Request = context.switchToHttp().getRequest<Request>();
-
-    const token: string = this.extractTokenFromHeader(request);
-
+    console.log('WsJwtAuthGuard');
+    const client: Socket = context.switchToWs().getClient();
+    const token: string = this.extractTokenFromClient(client);
+    console.log('token', token);
     if (token) {
       // verify token. If valid, assign decoded user to request. Else, throw error
-      request['user'] = await this.jwtTokensUtility.verifyAccessToken(token);
-      
-      if (request['user']) {
+      const decodedPayload = await this.jwtTokensUtility.verifyAccessToken(
+        token,
+      );
+      if (decodedPayload) {
+        context.switchToWs().getData()['user'] = decodedPayload;
         return true;
       }
-      
     }
-
     //if no token attached or token is invalid, throw error
-    throw new CustomUnauthorizedException(
-      ErrorMessage.UNAUTHORIZED,
-      ErrorCode.UNAUTHORIZED,
-    );
-
+    throw new WsException(ErrorCode.UNAUTHORIZED);
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const header = request.headers as Headers & { authorization?: string };
+  private extractTokenFromClient(client: Socket): string | undefined {
+    const header = client.handshake.headers as IncomingHttpHeaders & {
+      authorization?: string;
+    };
     const [type, token] = header.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }

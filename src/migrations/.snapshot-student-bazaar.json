@@ -48,6 +48,33 @@
           "primary": true,
           "nullable": false,
           "mappedType": "integer"
+        }
+      },
+      "name": "conversation",
+      "indexes": [
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
         },
         "img_path": {
           "name": "img_path",
@@ -542,6 +569,127 @@
           "nullable": false,
           "mappedType": "integer"
         },
+        "messsage": {
+          "name": "messsage",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "conversation_id": {
+          "name": "conversation_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "sender_id": {
+          "name": "sender_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "message_type": {
+          "name": "message_type",
+          "type": "enum('message')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "message"
+          ],
+          "mappedType": "enum"
+        },
+        "created_datetime": {
+          "name": "created_datetime",
+          "type": "datetime",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 0,
+          "default": "current_timestamp()",
+          "mappedType": "datetime"
+        }
+      },
+      "name": "message",
+      "indexes": [
+        {
+          "columnNames": [
+            "conversation_id"
+          ],
+          "composite": false,
+          "keyName": "message_conversation_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "sender_id"
+          ],
+          "composite": false,
+          "keyName": "message_sender_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "message_conversation_id_foreign": {
+          "constraintName": "message_conversation_id_foreign",
+          "columnNames": [
+            "conversation_id"
+          ],
+          "localTableName": "message",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "conversation",
+          "updateRule": "cascade"
+        },
+        "message_sender_id_foreign": {
+          "constraintName": "message_sender_id_foreign",
+          "columnNames": [
+            "sender_id"
+          ],
+          "localTableName": "message",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "user",
+          "updateRule": "cascade"
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
         "owner_id": {
           "name": "owner_id",
           "type": "int",
@@ -895,6 +1043,94 @@
             "user_id"
           ],
           "localTableName": "email_verification",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "user",
+          "updateRule": "cascade"
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "conversation_id": {
+          "name": "conversation_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        }
+      },
+      "name": "conversation_participant",
+      "indexes": [
+        {
+          "columnNames": [
+            "conversation_id"
+          ],
+          "composite": false,
+          "keyName": "conversation_participant_conversation_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "columnNames": [
+            "participant_id"
+          ],
+          "composite": false,
+          "keyName": "conversation_participant_participant_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "conversation_participant_conversation_id_foreign": {
+          "constraintName": "conversation_participant_conversation_id_foreign",
+          "columnNames": [
+            "conversation_id"
+          ],
+          "localTableName": "conversation_participant",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "conversation",
+          "updateRule": "cascade"
+        },
+        "conversation_participant_participant_id_foreign": {
+          "constraintName": "conversation_participant_participant_id_foreign",
+          "columnNames": [
+            "participant_id"
+          ],
+          "localTableName": "conversation_participant",
           "referencedColumnNames": [
             "id"
           ],

@@ -1,12 +1,7 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import {
-  ErrorCode,
-  ErrorMessage,
-} from 'src/common/exceptions/constants.exception';
 import { ITokenPayload } from '../auth.interface';
-import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
 
 @Injectable()
 export class JWTTokensUtility {
@@ -33,26 +28,24 @@ export class JWTTokensUtility {
     });
   }
 
-  async verifyAccessToken(token: string): Promise<ITokenPayload> {
+  async verifyAccessToken(token: string): Promise<ITokenPayload | undefined> {
     return this.verifyToken(
       token,
       this.configService.get<string>('jwtConstants.accessTokenSecret'),
     );
   }
 
-  async verifyRefreshToken(token: string): Promise<ITokenPayload> {
+  async verifyRefreshToken(token: string): Promise<ITokenPayload | undefined> {
     return this.verifyToken(
       token,
-      this.configService.get<string>('jwtConstants.refreshTokenSecret'),
-      ErrorCode.UNAUTHORIZED_REFRESH_TOKEN,
+      this.configService.get<string>('jwtConstants.refreshTokenSecret')
     );
   }
 
   private async verifyToken(
     token: string,
     secret: string,
-    errorCode?: string,
-  ): Promise<ITokenPayload> {
+  ): Promise<ITokenPayload | undefined> {
     try {
       const { sub, username, ...rest } = await this.jwtService.verifyAsync(
         token,
@@ -63,10 +56,7 @@ export class JWTTokensUtility {
 
       return { sub, username };
     } catch (err) {
-      throw new CustomUnauthorizedException(
-        ErrorMessage.UNAUTHORIZED,
-        errorCode ? errorCode : ErrorCode.UNAUTHORIZED,
-      );
+      return;
     }
   }
 }

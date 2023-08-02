@@ -202,7 +202,7 @@ export class AuthService {
         to: emailAddress,
         from: process.env.EMAIL,
         html: this.emailTemplate.getAccountVerificationEmailTemplate(
-          auth.token,
+          auth.token, auth.user.username
         ),
       });
     }
@@ -266,6 +266,13 @@ export class AuthService {
     const decodedPayload: ITokenPayload =
       await this.jwtTokensUtility.verifyRefreshToken(refreshToken);
 
+    if (!decodedPayload) {
+      throw new CustomUnauthorizedException(
+        ErrorMessage.UNAUTHORIZED,
+        ErrorCode.UNAUTHORIZED_REFRESH_TOKEN
+      )
+    }
+    
     // Check if refresh token is the current refresh token of user
     // Find refresh token by user/client
     const user: RefreshToken = await this.refreshTokenRepository.findOne({
