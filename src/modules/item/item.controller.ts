@@ -31,7 +31,10 @@ export class ItemController {
 
     @Post('images')
     @UseInterceptors(FilesInterceptor('files'))
-    async uploadItemImage(@UploadedFiles() files: Array<Express.Multer.File>): Promise<Image[]> {
+    async uploadItemImage(@UploadedFiles() files: Array<Express.Multer.File>): Promise<{
+        image: Image;
+        thumbnail: Image;
+    }[]> {
         return await this.itemService.uploadItemImage(files);
     }
 

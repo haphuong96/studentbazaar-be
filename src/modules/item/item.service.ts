@@ -15,6 +15,8 @@ import { ItemCategoryService } from './category.service';
 import { ItemConditionService } from './condition.service';
 import { ImageContainerClientService } from '../azure-blob-storage/img-container-client.service';
 import { Image } from '../img/image.entity';
+import { resizeImageFromBuffer } from 'src/utils/img-resize.util';
+import { THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
 
 @Injectable()
 export class ItemService {
@@ -57,10 +59,11 @@ export class ItemService {
       itemPrice: item.price,
     });
 
-    item.img.forEach((image: Image) => {
+    item.img.forEach(({ image, thumbnail }) => {
       itemCreate.img.add(
         this.em.create(ItemImage, {
-          image: image,
+          image,
+          thumbnail,
         }),
       );
     });
@@ -88,7 +91,13 @@ export class ItemService {
     }
 
     return await this.itemRepository.find(whereConditions, {
-      populate: ['owner', 'category', 'condition', 'img.image'],
+      populate: [
+        'owner',
+        'category',
+        'condition',
+        'img.image',
+        'img.thumbnail',
+      ],
       orderBy: {
         createdDatetime: 'DESC',
       },
@@ -102,32 +111,69 @@ export class ItemService {
     });
   }
 
-  async uploadItemImage(files: Array<Express.Multer.File>): Promise<Image[]> {
-    const uploadTasks: Promise<Image>[] = files.map(async (file) => {
-      const blockBlobClient: BlockBlobClient =
-        this.imgContainerClientService.getBlockBlobClient(file.originalname);
-      try {
-        const result = await blockBlobClient.uploadData(file.buffer, {
-          blobHTTPHeaders: {
-            blobContentType: file.mimetype,
-          },
-        });
+  async uploadItemImage(
+    files: Array<Express.Multer.File>,
+  ): Promise<{ image: Image; thumbnail: Image }[]> {
+    const uploadTasks: Promise<{ image: Image; thumbnail: Image }>[] =
+      files.map(async (file) => {
+        const imgblockBlobClient: BlockBlobClient =
+          this.imgContainerClientService.getBlockBlobClient(file.originalname);
 
-        // create image entities to store in database
-        return this.em.create(Image, { imgPath: result._response.request.url });
-      } catch (error) {
-        console.log(error);
-        return;
-      }
-    });
+        const thumbnailBlockBlobClient: BlockBlobClient =
+          this.imgContainerClientService.getBlockBlobClient(
+            '/' + file.originalname + 'wx400',
+          );
+        try {
+          // resize image to thumbnail
+          const thumbnail: Buffer = await resizeImageFromBuffer(
+            file.buffer,
+            THUMBNAIL_RESIZE_HEIGHT,
+          );
+
+          // upload image to azure blob storage
+          const [imgUpload, thumbnailUpload] = await Promise.all([
+            imgblockBlobClient.uploadData(file.buffer, {
+              blobHTTPHeaders: {
+                blobContentType: file.mimetype,
+              },
+            }),
+            thumbnailBlockBlobClient.uploadData(thumbnail, {
+              blobHTTPHeaders: {
+                blobContentType: file.mimetype,
+              },
+            }),
+          ]);
+
+          // create image entities to store in database
+          return {
+            image: this.em.create(Image, {
+              imgPath: imgUpload._response.request.url,
+            }),
+            thumbnail: this.em.create(Image, {
+              imgPath: thumbnailUpload._response.request.url,
+            }),
+          };
+        } catch (error) {
+          console.log(error);
+          return;
+        }
+      });
 
     // Retrieve successfully uploaded images
-    const images: Image[] = (await Promise.all(uploadTasks)).filter(
-      (image: Image) => image,
-    );
+    const imageUrls: { image: Image; thumbnail: Image }[] = (
+      await Promise.all(uploadTasks)
+    ).filter((imageUrl) => imageUrl);
 
-    this.em.persistAndFlush(images);
+    // Persist image entities to database
+    const imagesToPersist: Image[] = [];
 
-    return images;
+    for (const imageUrl of imageUrls) {
+      imagesToPersist.push(imageUrl.image);
+      imagesToPersist.push(imageUrl.thumbnail);
+    }
+
+    this.em.persistAndFlush(imagesToPersist);
+
+    return imageUrls;
   }
 }

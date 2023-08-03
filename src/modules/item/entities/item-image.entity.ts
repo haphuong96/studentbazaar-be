@@ -6,6 +6,7 @@ import {
   ManyToOne,
   OneToOne,
   wrap,
+  EntityDTO
 } from '@mikro-orm/core';
 import { Item } from './item.entity';
 import { Image } from '../../img/image.entity';
@@ -18,17 +19,20 @@ export class ItemImage {
   @OneToOne()
   image!: Image;
 
+  @OneToOne()
+  thumbnail!: Image;
+
   @ManyToOne()
   item!: Item;
 
   /**
    * Serialize image object only
-   * @param args 
-   * @returns 
+   * @param args
+   * @returns
    */
   toJSON(...args: any[]): { [p: string]: any } {
-    const o = wrap(this, true).toObject(...args); // do not forget to pass rest params here
+    const o : EntityDTO<this> = wrap(this, true).toObject(...args); // do not forget to pass rest params here
 
-    return o['image'];
+    return { url: o['image']['imgPath'], thumbnailUrl: o['thumbnail']['imgPath'] };
   }
 }

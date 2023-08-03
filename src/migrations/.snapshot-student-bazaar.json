@@ -883,6 +883,15 @@
           "nullable": false,
           "mappedType": "integer"
         },
+        "thumbnail_id": {
+          "name": "thumbnail_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
         "item_id": {
           "name": "item_id",
           "type": "int",
@@ -901,6 +910,15 @@
           ],
           "composite": false,
           "keyName": "item_image_image_id_unique",
+          "primary": false,
+          "unique": true
+        },
+        {
+          "columnNames": [
+            "thumbnail_id"
+          ],
+          "composite": false,
+          "keyName": "item_image_thumbnail_id_unique",
           "primary": false,
           "unique": true
         },
@@ -929,6 +947,18 @@
           "constraintName": "item_image_image_id_foreign",
           "columnNames": [
             "image_id"
+          ],
+          "localTableName": "item_image",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "image",
+          "updateRule": "cascade"
+        },
+        "item_image_thumbnail_id_foreign": {
+          "constraintName": "item_image_thumbnail_id_foreign",
+          "columnNames": [
+            "thumbnail_id"
           ],
           "localTableName": "item_image",
           "referencedColumnNames": [
