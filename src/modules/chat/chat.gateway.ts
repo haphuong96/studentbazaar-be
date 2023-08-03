@@ -15,7 +15,7 @@ import { WsJwtAuthGuard } from '../auth/guards/ws-auth.guard';
 import { ITokenPayload } from '../auth/auth.interface';
 import { ClientData } from './chat.interface';
 import { ErrorCode } from 'src/common/exceptions/constants.exception';
-import { WsExceptionsFilter } from 'src/common/exceptions/filter.exception';
+// import { WsExceptionsFilter } from 'src/common/exceptions/filter.exception';
 
 @Injectable()
 // @UseGuards(WsJwtAuthGuard)
@@ -31,7 +31,7 @@ export class ChatGateway implements OnGatewayConnection {
    * @param socket
    * @param args
    */
-  @UseFilters(new WsExceptionsFilter())
+  // @UseFilters(new WsExceptionsFilter())
   async handleConnection(socket: Socket, ...args: any[]) {
     console.log('client connected', socket.id);
 
@@ -44,11 +44,23 @@ export class ChatGateway implements OnGatewayConnection {
 
     console.log(user)
     socket.handshake.auth.user = {...user};
+
+    /** --------------Socket experiment*/
+    // on connect, send all (online) users to client
+    const users = [];
+    for (let [id, socket] of this.server.of('/').sockets) {
+      users.push({
+        userID: id,
+        username: socket.handshake.auth.user.username
+      })
+    }
+
+    this.server.emit("users", users);
   }
 
   @SubscribeMessage('message')
   onMessage(
-    @MessageBody() data: ClientData,
+    @MessageBody() data: any,
     @ConnectedSocket() socket: Socket,
   ): void { //   WsResponse<void>
     // If authenticated, send message to all clients & store messages
@@ -59,8 +71,12 @@ export class ChatGateway implements OnGatewayConnection {
     const messages = this.chatService.saveMessage(user.sub, data.message);
 
     console.log('data', data);
+    console.log('from ', socket.id)
     // socket.request.
-    this.server.emit('message', data.message);
+    socket.to(data.to).emit("message", {
+      message: data.message,
+      from: socket.id
+    })
 
     // return {event: 'message', data: 'server hello' + data};
 
