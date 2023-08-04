@@ -71,9 +71,25 @@ export class ItemService {
     await this.em.persistAndFlush(itemCreate);
   }
 
-  async getItems(query: SearchItemDto): Promise<Item[]> {
+  async getItems(
+    query: SearchItemDto,
+  ): Promise<
+    { total: number; items: Item[] } | { nextCursor: number | string; items: Item[] }
+  > {
+
+    /**
+     * If offset is not provided, we assume that the client wants to use cursor-based pagination
+     */
+    const isLimitOffset : boolean = typeof query.offset === 'number';
+
     const whereConditions: FilterQuery<Item> = { $and: [] };
 
+    // nextCursor
+    if (query.nextCursor) {
+      whereConditions.$and.push({
+        id: { $lt: query.nextCursor },
+      });
+    }
     // Upon selecting a category, we want to show all items under that category and its subcategories
     if (query.categoryId) {
       whereConditions.$and.push({
@@ -90,18 +106,27 @@ export class ItemService {
       });
     }
 
-    return await this.itemRepository.find(whereConditions, {
-      populate: [
-        'owner',
-        'category',
-        'condition',
-        'img.image',
-        'img.thumbnail',
-      ],
-      orderBy: {
-        createdDatetime: 'DESC',
+    const [items, count] = await this.itemRepository.findAndCount(
+      whereConditions,
+      {
+        populate: [
+          'owner',
+          'category',
+          'condition',
+          'img.image',
+          'img.thumbnail',
+        ],
+        orderBy: {
+          id: 'DESC',
+        },
+        limit: isLimitOffset ? query.limit : query.limit + 1,
+        offset: isLimitOffset ? query.offset : undefined,
       },
-    });
+    );
+
+    return isLimitOffset
+      ? { total: count, items }
+      : { nextCursor: items.pop()?.id || "", items };
   }
 
   async getOneItem(id: number): Promise<Item> {

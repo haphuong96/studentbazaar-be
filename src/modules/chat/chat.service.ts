@@ -12,10 +12,8 @@ export class ChatService {
   }
 
   async retrieveUserFromSocket(socket: Socket) {
-    const [type, token] =
-      socket.handshake.headers.authorization?.split(' ') ?? [];
+    const [type, token] = socket.handshake.auth.token.split(' ') ?? [];
 
-    // const { token } = socket.handshake.auth;
     console.log('token', token);
 
     const user: ITokenPayload = await this.jwtService.verifyAccessToken(token);
