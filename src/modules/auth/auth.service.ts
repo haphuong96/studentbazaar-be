@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { University } from '../market/entities/university.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
-import { User } from '../user/entities/user.entity';
+import { User, UserStatus } from '../user/entities/user.entity';
 import {
   ErrorCode,
   ErrorMessage,
@@ -202,7 +202,8 @@ export class AuthService {
         to: emailAddress,
         from: process.env.EMAIL,
         html: this.emailTemplate.getAccountVerificationEmailTemplate(
-          auth.token, auth.user.username
+          auth.token,
+          auth.user.username,
         ),
       });
     }
@@ -244,8 +245,13 @@ export class AuthService {
       );
     }
 
+    // Email verified successfully
+    // update user status
+    auth.user.status = UserStatus.VERIFIED;
+
     // delete token
     await this.em.removeAndFlush(auth);
+
     return true;
   }
 
@@ -269,10 +275,10 @@ export class AuthService {
     if (!decodedPayload) {
       throw new CustomUnauthorizedException(
         ErrorMessage.UNAUTHORIZED,
-        ErrorCode.UNAUTHORIZED_REFRESH_TOKEN
-      )
+        ErrorCode.UNAUTHORIZED_REFRESH_TOKEN,
+      );
     }
-    
+
     // Check if refresh token is the current refresh token of user
     // Find refresh token by user/client
     const user: RefreshToken = await this.refreshTokenRepository.findOne({

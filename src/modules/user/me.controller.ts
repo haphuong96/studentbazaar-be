@@ -1,9 +1,8 @@
-import { Controller, Get, Post, Param, Query, Body, Req } from '@nestjs/common';
-import { Public } from 'src/common/auth.constants';
+import { Controller, Get, Put, Req, Body } from '@nestjs/common';
 import { User } from '../user/entities/user.entity';
 import { ITokenPayload, RequestWithUser } from '../auth/auth.interface';
-import { MeService } from './me.service';
 import { UserService } from './user.service';
+import { UpdateUserDto } from './dto/user.dto';
 
 @Controller('me')
 export class MeController {
@@ -14,5 +13,22 @@ export class MeController {
     const user: ITokenPayload = request.user;
 
     return this.userService.getUserById(user.sub);
+  }
+
+  @Put('profile')
+  async updateMyProfile(
+    @Req() request: RequestWithUser,
+    @Body() user: UpdateUserDto,
+  ): Promise<User> {
+    const requestUser: ITokenPayload = request.user;
+
+    return this.userService.updateUser(user, requestUser.sub);
+  }
+
+  @Put('account/activate')
+  async activateAccount(@Req() request: RequestWithUser): Promise<boolean> {
+    const requestUser: ITokenPayload = request.user;
+
+    return this.userService.activateAccount(requestUser.sub);
   }
 }

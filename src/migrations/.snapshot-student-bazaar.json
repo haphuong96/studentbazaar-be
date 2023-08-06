@@ -274,6 +274,15 @@
     },
     {
       "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
         "university_id": {
           "name": "university_id",
           "type": "int",
@@ -316,10 +325,9 @@
         {
           "keyName": "PRIMARY",
           "columnNames": [
-            "university_id",
-            "campus_location_id"
+            "id"
           ],
-          "composite": true,
+          "composite": false,
           "primary": true,
           "unique": true
         }
@@ -336,7 +344,6 @@
             "id"
           ],
           "referencedTableName": "university",
-          "deleteRule": "cascade",
           "updateRule": "cascade"
         },
         "university_campus_campus_location_id_foreign": {
@@ -349,7 +356,82 @@
             "id"
           ],
           "referencedTableName": "campus_location",
-          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        }
+      }
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "university_campus_location_id": {
+          "name": "university_campus_location_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "string"
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "string"
+        }
+      },
+      "name": "pick_up_point",
+      "indexes": [
+        {
+          "columnNames": [
+            "university_campus_location_id"
+          ],
+          "composite": false,
+          "keyName": "pick_up_point_university_campus_location_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "pick_up_point_university_campus_location_id_foreign": {
+          "constraintName": "pick_up_point_university_campus_location_id_foreign",
+          "columnNames": [
+            "university_campus_location_id"
+          ],
+          "localTableName": "pick_up_point",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "university_campus",
           "updateRule": "cascade"
         }
       }
@@ -421,6 +503,21 @@
           "primary": false,
           "nullable": false,
           "mappedType": "unknown"
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('UNVERIFIED', 'VERIFIED', 'ACTIVE', 'SUSPENDED')",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "enumItems": [
+            "UNVERIFIED",
+            "VERIFIED",
+            "ACTIVE",
+            "SUSPENDED"
+          ],
+          "mappedType": "enum"
         }
       },
       "name": "user",
@@ -761,6 +858,15 @@
           "nullable": true,
           "mappedType": "double"
         },
+        "location_id": {
+          "name": "location_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
         "created_datetime": {
           "name": "created_datetime",
           "type": "datetime",
@@ -814,6 +920,15 @@
           "unique": false
         },
         {
+          "columnNames": [
+            "location_id"
+          ],
+          "composite": false,
+          "keyName": "item_location_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
           "keyName": "PRIMARY",
           "columnNames": [
             "id"
@@ -859,6 +974,18 @@
             "id"
           ],
           "referencedTableName": "item_condition",
+          "updateRule": "cascade"
+        },
+        "item_location_id_foreign": {
+          "constraintName": "item_location_id_foreign",
+          "columnNames": [
+            "location_id"
+          ],
+          "localTableName": "item",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pick_up_point",
           "updateRule": "cascade"
         }
       }

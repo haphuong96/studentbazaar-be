@@ -12,6 +12,7 @@ import { User } from '../../user/entities/user.entity';
 import { ItemCategory } from './category.entity';
 import { ItemCondition } from './condition.entity';
 import { ItemImage } from './item-image.entity';
+import { PickUpPoint } from '../../market/entities/pickup-point.entity';
 
 @Entity()
 export class Item {
@@ -41,6 +42,9 @@ export class Item {
 
   @Property({ type: types.double })
   itemPrice?: number;
+
+  @ManyToOne()
+  location!: PickUpPoint;
 
   @Property({ type: types.datetime, defaultRaw: `current_timestamp()` })
   createdDatetime!: Date;

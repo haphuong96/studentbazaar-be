@@ -5,3 +5,8 @@ export class CreateUserDto extends RegisterUserDto {
     university: University;
     password: string;
 }
+
+export class UpdateUserDto {
+    campusId?: number;
+    fullname?: string;
+}

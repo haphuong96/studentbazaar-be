@@ -106,6 +106,18 @@ export class ItemService {
       });
     }
 
+    if (query.campusId) {
+      whereConditions.$and.push({
+        owner: { campus: query.campusId },
+      });
+    }
+
+    if (query.universityId) {
+      whereConditions.$and.push({
+        owner: { university: query.universityId },
+      });
+    }
+
     const [items, count] = await this.itemRepository.findAndCount(
       whereConditions,
       {

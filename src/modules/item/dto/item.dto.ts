@@ -23,4 +23,8 @@ export class SearchItemDto {
   q?: string;
   @Transform(({ value }) => parseInt(value))
   categoryId?: number;
+  @Transform(({ value }) => parseInt(value))
+  campusId?: number;
+  @Transform(({ value }) => parseInt(value))
+  universityId?: number;
 }

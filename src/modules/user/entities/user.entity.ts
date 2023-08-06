@@ -1,11 +1,11 @@
 import {
   Entity,
+  Enum,
   ManyToOne,
   OneToMany,
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
-import { Item } from '../../item/entities/item.entity';
 import { University } from '../../market/entities/university.entity';
 import { CampusLocation } from '../../market/entities/campus.entity';
 
@@ -32,6 +32,9 @@ export class User {
   @Property({ columnType: 'varbinary(255)', hidden: true })
   password!: string;
 
+  @Enum(() => UserStatus)
+  status!: UserStatus;
+  
   constructor(user: {
     id?: number;
     username: string;
@@ -49,4 +52,11 @@ export class User {
     this.emailAddress = user.emailAddress;
     this.password = user.password;
   }
+}
+
+export enum UserStatus {
+  UNVERIFIED = 'UNVERIFIED',
+  VERIFIED = 'VERIFIED',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
 }
