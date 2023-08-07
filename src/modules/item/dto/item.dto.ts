@@ -28,4 +28,6 @@ export class SearchItemDto {
   campusId?: number;
   @Transform(({ value }) => parseInt(value))
   universityId?: number;
+  @Transform(({ value }) => parseInt(value))
+  ownerId?: number;
 }

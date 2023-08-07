@@ -130,6 +130,12 @@ export class ItemService {
       });
     }
 
+    if (query.ownerId) {
+      whereConditions.$and.push({
+        owner: query.ownerId,
+      });
+    }
+
     const [items, count] = await this.itemRepository.findAndCount(
       whereConditions,
       {
