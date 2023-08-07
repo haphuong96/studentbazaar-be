@@ -36,7 +36,7 @@ export class ItemService {
 
     private imgContainerClientService: ImageContainerClientService,
 
-    private marketService: MarketService
+    private marketService: MarketService,
   ) {}
 
   /**
@@ -53,8 +53,9 @@ export class ItemService {
     const condition: ItemCondition =
       await this.itemConditionService.getOneItemConditionById(item.conditionId);
 
-    const location: PickUpPoint = await this.marketService.getOneDeliveryLocation(item.locationId);
-    
+    const location: PickUpPoint =
+      await this.marketService.getOneDeliveryLocation(item.locationId);
+
     const itemCreate: Item = this.itemRepository.create({
       owner,
       category,
@@ -63,7 +64,7 @@ export class ItemService {
       itemName: item.itemName,
       itemDescription: item.itemDescription,
       itemPrice: item.price,
-      location
+      location,
     });
 
     item.img.forEach(({ image, thumbnail }) => {
@@ -81,13 +82,13 @@ export class ItemService {
   async getItems(
     query: SearchItemDto,
   ): Promise<
-    { total: number; items: Item[] } | { nextCursor: number | string; items: Item[] }
+    | { total: number; items: Item[] }
+    | { nextCursor: number | string; items: Item[] }
   > {
-
     /**
      * If offset is not provided, we assume that the client wants to use cursor-based pagination
      */
-    const isLimitOffset : boolean = typeof query.offset === 'number';
+    const isLimitOffset: boolean = typeof query.offset === 'number';
 
     const whereConditions: FilterQuery<Item> = { $and: [] };
 
@@ -115,13 +116,17 @@ export class ItemService {
 
     if (query.campusId) {
       whereConditions.$and.push({
-        owner: { campus: query.campusId },
+        location: {
+          universityCampusLocation: { campusLocation: query.campusId },
+        },
       });
     }
 
     if (query.universityId) {
       whereConditions.$and.push({
-        owner: { university: query.universityId },
+        location: {
+          universityCampusLocation: { university: query.universityId },
+        },
       });
     }
 
@@ -143,9 +148,14 @@ export class ItemService {
       },
     );
 
+    /**
+     * return 
+     * - next cursor if count > limit, the last item in the array is the next cursor 
+     * - else show empty to indicate no more items, return all items
+     */
     return isLimitOffset
       ? { total: count, items }
-      : { nextCursor: items.pop()?.id || "", items };
+      : { nextCursor: count > query.limit? items.pop()?.id : '', items };
   }
 
   async getOneItem(id: number): Promise<Item> {
