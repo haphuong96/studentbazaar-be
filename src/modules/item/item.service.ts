@@ -17,6 +17,8 @@ import { ImageContainerClientService } from '../azure-blob-storage/img-container
 import { Image } from '../img/image.entity';
 import { resizeImageFromBuffer } from 'src/utils/img-resize.util';
 import { THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
+import { PickUpPoint } from '../market/entities/pickup-point.entity';
+import { MarketService } from '../market/market.service';
 
 @Injectable()
 export class ItemService {
@@ -33,6 +35,8 @@ export class ItemService {
     private readonly em: EntityManager,
 
     private imgContainerClientService: ImageContainerClientService,
+
+    private marketService: MarketService
   ) {}
 
   /**
@@ -49,6 +53,8 @@ export class ItemService {
     const condition: ItemCondition =
       await this.itemConditionService.getOneItemConditionById(item.conditionId);
 
+    const location: PickUpPoint = await this.marketService.getOneDeliveryLocation(item.locationId);
+    
     const itemCreate: Item = this.itemRepository.create({
       owner,
       category,
@@ -57,6 +63,7 @@ export class ItemService {
       itemName: item.itemName,
       itemDescription: item.itemDescription,
       itemPrice: item.price,
+      location
     });
 
     item.img.forEach(({ image, thumbnail }) => {

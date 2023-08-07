@@ -465,6 +465,15 @@
           "nullable": true,
           "mappedType": "integer"
         },
+        "default_pick_up_point_id": {
+          "name": "default_pick_up_point_id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "integer"
+        },
         "fullname": {
           "name": "fullname",
           "type": "varchar(255)",
@@ -541,6 +550,15 @@
           "unique": false
         },
         {
+          "columnNames": [
+            "default_pick_up_point_id"
+          ],
+          "composite": false,
+          "keyName": "user_default_pick_up_point_id_index",
+          "primary": false,
+          "unique": false
+        },
+        {
           "keyName": "PRIMARY",
           "columnNames": [
             "id"
@@ -574,6 +592,19 @@
             "id"
           ],
           "referencedTableName": "campus_location",
+          "deleteRule": "set null",
+          "updateRule": "cascade"
+        },
+        "user_default_pick_up_point_id_foreign": {
+          "constraintName": "user_default_pick_up_point_id_foreign",
+          "columnNames": [
+            "default_pick_up_point_id"
+          ],
+          "localTableName": "user",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "pick_up_point",
           "deleteRule": "set null",
           "updateRule": "cascade"
         }

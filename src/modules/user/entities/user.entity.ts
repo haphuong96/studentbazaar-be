@@ -8,6 +8,7 @@ import {
 } from '@mikro-orm/core';
 import { University } from '../../market/entities/university.entity';
 import { CampusLocation } from '../../market/entities/campus.entity';
+import { PickUpPoint } from '../../market/entities/pickup-point.entity';
 
 @Entity()
 export class User {
@@ -19,6 +20,9 @@ export class User {
 
   @ManyToOne()
   campus?: CampusLocation;
+
+  @ManyToOne()
+  defaultPickUpPoint?: PickUpPoint;
 
   @Property({ length: 255 })
   fullname?: string;

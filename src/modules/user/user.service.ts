@@ -42,7 +42,7 @@ export class UserService {
   async getUserById(id: number): Promise<User> {
     return await this.userRepository.findOneOrFail(id, {
       failHandler: findOneOrFailBadRequestExceptionHandler,
-      populate: ['campus', 'university.campuses'],
+      populate: ['campus', 'university.campuses', 'defaultPickUpPoint'],
     });
   }
 

@@ -11,6 +11,7 @@ export class CreateItemDto {
     image: Image;
     thumbnail: Image;
   }[];
+  locationId: number;
 }
 
 export class SearchItemDto {

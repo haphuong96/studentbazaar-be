@@ -11,12 +11,14 @@ import { ItemConditionService } from './condition.service';
 import { ItemCondition } from './entities/condition.entity';
 import { UserModule } from '../user/user.module';
 import { AzureBlobStorageClientModule } from '../azure-blob-storage/blob-storage.module';
+import { MarketModule } from '../market/market.module';
 
 @Module({
   imports: [
     MikroOrmModule.forFeature([Item, ItemCategory, ItemCondition]),
     UserModule,
-    AzureBlobStorageClientModule
+    AzureBlobStorageClientModule,
+    MarketModule
   ],
   controllers: [
     ItemController,

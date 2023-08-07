@@ -1,4 +1,11 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import {
+  Entity,
+  EntityDTO,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+  wrap,
+} from '@mikro-orm/core';
 
 import { UniversityCampus } from './university-campus.entity';
 
@@ -15,4 +22,12 @@ export class PickUpPoint {
 
   @Property()
   address!: string;
+
+  toJSON(...args: any[]): { [p: string]: any } {
+    const o: EntityDTO<this> = wrap(this, true).toObject(...args); // do not forget to pass rest params here
+    o['university'] = o['universityCampusLocation']['university'];
+    o['campusLocation'] = o['universityCampusLocation']['campusLocation'];
+    delete o['universityCampusLocation'];
+    return o;
+  }
 }
