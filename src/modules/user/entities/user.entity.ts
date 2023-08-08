@@ -57,8 +57,9 @@ export class User {
     const o: EntityDTO<this> = wrap(this, true).toObject(...args); // do not forget to pass rest params here
     if (o['universityCampus']) 
     {
-      o['university'] = o['universityCampus'] ? o['universityCampus']['university'] : null;
-      o['campus'] = o['universityCampus'] ? o['universityCampus']['campusLocation'] : null;
+      o['university'] = o['universityCampus']['university'];
+      o['campus'] = o['universityCampus']['campusLocation'];
+      o['suggestedPickUpPoints'] = o['universityCampus']['pickUpPoints'];
     }
 
     delete o['universityCampus'];

@@ -28,22 +28,31 @@ export class MarketService {
   ) {}
 
   async getUniversityByEmailAddress(emailAddress: string): Promise<University> {
-    return await this.universityRepository.findOne({
-      emailAddressDomain: emailAddress.split('@')[1],
-    }, {
-      populate: ['campuses']
-    });
+    return await this.universityRepository.findOne(
+      {
+        emailAddressDomain: emailAddress.split('@')[1],
+      },
+      {
+        populate: ['campuses'],
+      },
+    );
   }
 
   async getUniversityWithCampus(universityId: number, campusId: number) {
-    return await this.em.findOneOrFail(UniversityCampus, {
-      $and: [{
-        university: universityId,
-        campusLocation: campusId,
-      }]
-    }, {
-      failHandler: findOneOrFailNotFoundExceptionHandler,
-    })
+    return await this.em.findOneOrFail(
+      UniversityCampus,
+      {
+        $and: [
+          {
+            university: universityId,
+            campusLocation: campusId,
+          },
+        ],
+      },
+      {
+        failHandler: findOneOrFailNotFoundExceptionHandler,
+      },
+    );
   }
 
   async getCampusById(id: number): Promise<CampusLocation> {
@@ -72,20 +81,11 @@ export class MarketService {
         universityCampusLocation: { campusLocation: query.campusLocationId },
       });
     }
-    return await this.deliveryLocationRepository.find(whereConditions, {
-      populate: [
-        'universityCampusLocation.university',
-        'universityCampusLocation.campusLocation',
-      ],
-    });
+    return await this.deliveryLocationRepository.find(whereConditions);
   }
 
   async getOneDeliveryLocation(id: number): Promise<PickUpPoint> {
     return await this.deliveryLocationRepository.findOneOrFail(id, {
-      populate: [
-        'universityCampusLocation.university',
-        'universityCampusLocation.campusLocation',
-      ],
       failHandler: findOneOrFailNotFoundExceptionHandler,
     });
   }

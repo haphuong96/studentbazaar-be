@@ -50,6 +50,7 @@ export class UserService {
         'universityCampus.campusLocation',
         'universityCampus.university',
         'defaultPickUpPoint',
+        'universityCampus.pickUpPoints'
       ],
     });
     return data;

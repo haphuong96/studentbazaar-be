@@ -25,8 +25,6 @@ export class PickUpPoint {
 
   toJSON(...args: any[]): { [p: string]: any } {
     const o: EntityDTO<this> = wrap(this, true).toObject(...args); // do not forget to pass rest params here
-    o['university'] = o['universityCampusLocation']['university'];
-    o['campusLocation'] = o['universityCampusLocation']['campusLocation'];
     delete o['universityCampusLocation'];
     return o;
   }
