@@ -26,6 +26,7 @@ import { EmailService } from '../email/email.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { EmailTemplate } from '../email/email-template.util';
 import { UserService } from '../user/user.service';
+import { MarketService } from '../market/market.service';
 
 // TODO:
 // - [ ] unit test, .env file...
@@ -50,6 +51,8 @@ export class AuthService {
     private emailService: EmailService,
 
     private emailTemplate: EmailTemplate,
+
+    private marketService: MarketService,
   ) {}
 
   /**
@@ -130,9 +133,8 @@ export class AuthService {
    */
   async checkEmailAddress(emailAddress: string): Promise<University> {
     // Check if it is a valid university email address
-    const university: University = await this.universityRepository.findOne({
-      emailAddressDomain: emailAddress.split('@')[1],
-    });
+    const university: University =
+      await this.marketService.getUniversityByEmailAddress(emailAddress);
 
     if (!university) {
       throw new CustomForbiddenException(
@@ -162,9 +164,7 @@ export class AuthService {
    */
   async registerUser(newUser: RegisterUserDto): Promise<User> {
     // Check email address
-    const university: University = await this.checkEmailAddress(
-      newUser.emailAddress,
-    );
+    await this.checkEmailAddress(newUser.emailAddress);
 
     // Check if username already existed
     const userFound: User = await this.userService.getUserByUsername(
@@ -184,7 +184,6 @@ export class AuthService {
     // Create new user
     return await this.userService.createUser({
       ...newUser,
-      university,
       password: hash,
     });
   }
@@ -199,7 +198,7 @@ export class AuthService {
     if (auth) {
       await this.emailService.sendMail({
         subject: 'Verify your email',
-        to: emailAddress,
+        to: 'tnguyen09@qub.ac.uk',
         from: process.env.EMAIL,
         html: this.emailTemplate.getAccountVerificationEmailTemplate(
           auth.token,

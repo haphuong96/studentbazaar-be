@@ -3,7 +3,7 @@ import { User } from '../user/entities/user.entity';
 import { ITokenPayload, RequestWithUser } from '../auth/auth.interface';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/user.dto';
-
+import { serialize } from '@mikro-orm/core';
 @Controller('me')
 export class MeController {
   constructor(private userService: UserService) {}
@@ -12,7 +12,7 @@ export class MeController {
   async getMyProfile(@Req() request: RequestWithUser): Promise<User> {
     const user: ITokenPayload = request.user;
 
-    return this.userService.getUserById(user.sub);
+    return await this.userService.getUserById(user.sub);
   }
 
   @Put('profile')
@@ -22,13 +22,13 @@ export class MeController {
   ): Promise<User> {
     const requestUser: ITokenPayload = request.user;
 
-    return this.userService.updateUser(user, requestUser.sub);
+    return await this.userService.updateUser(user, requestUser.sub);
   }
 
   @Put('account/activate')
   async activateAccount(@Req() request: RequestWithUser): Promise<boolean> {
     const requestUser: ITokenPayload = request.user;
 
-    return this.userService.activateAccount(requestUser.sub);
+    return await this.userService.activateAccount(requestUser.sub);
   }
 }

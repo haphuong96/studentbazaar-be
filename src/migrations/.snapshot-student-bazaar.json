@@ -447,17 +447,8 @@
           "nullable": false,
           "mappedType": "integer"
         },
-        "university_id": {
-          "name": "university_id",
-          "type": "int",
-          "unsigned": true,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "campus_id": {
-          "name": "campus_id",
+        "university_campus_id": {
+          "name": "university_campus_id",
           "type": "int",
           "unsigned": true,
           "autoincrement": false,
@@ -533,19 +524,10 @@
       "indexes": [
         {
           "columnNames": [
-            "university_id"
+            "university_campus_id"
           ],
           "composite": false,
-          "keyName": "user_university_id_index",
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "campus_id"
-          ],
-          "composite": false,
-          "keyName": "user_campus_id_index",
+          "keyName": "user_university_campus_id_index",
           "primary": false,
           "unique": false
         },
@@ -570,28 +552,16 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "user_university_id_foreign": {
-          "constraintName": "user_university_id_foreign",
+        "user_university_campus_id_foreign": {
+          "constraintName": "user_university_campus_id_foreign",
           "columnNames": [
-            "university_id"
+            "university_campus_id"
           ],
           "localTableName": "user",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "university",
-          "updateRule": "cascade"
-        },
-        "user_campus_id_foreign": {
-          "constraintName": "user_campus_id_foreign",
-          "columnNames": [
-            "campus_id"
-          ],
-          "localTableName": "user",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "campus_location",
+          "referencedTableName": "university_campus",
           "deleteRule": "set null",
           "updateRule": "cascade"
         },

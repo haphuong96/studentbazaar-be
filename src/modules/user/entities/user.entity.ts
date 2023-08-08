@@ -1,14 +1,15 @@
 import {
   Entity,
+  EntityDTO,
   Enum,
   ManyToOne,
   OneToMany,
   PrimaryKey,
   Property,
+  wrap,
 } from '@mikro-orm/core';
-import { University } from '../../market/entities/university.entity';
-import { CampusLocation } from '../../market/entities/campus.entity';
 import { PickUpPoint } from '../../market/entities/pickup-point.entity';
+import { UniversityCampus } from '../../market/entities/university-campus.entity';
 
 @Entity()
 export class User {
@@ -16,10 +17,7 @@ export class User {
   id!: number;
 
   @ManyToOne()
-  university!: University;
-
-  @ManyToOne()
-  campus?: CampusLocation;
+  universityCampus?: UniversityCampus;
 
   @ManyToOne()
   defaultPickUpPoint?: PickUpPoint;
@@ -38,23 +36,34 @@ export class User {
 
   @Enum(() => UserStatus)
   status!: UserStatus;
-  
+
   constructor(user: {
     id?: number;
     username: string;
     emailAddress: string;
-    university?: University;
-    campus?: CampusLocation;
+    universityCampus: UniversityCampus;
     fullname?: string;
     password?: string;
   }) {
     this.id = user.id;
-    this.university = user.university;
-    this.campus = user.campus;
+    this.universityCampus = user.universityCampus;
     this.fullname = user.fullname;
     this.username = user.username;
     this.emailAddress = user.emailAddress;
     this.password = user.password;
+  }
+
+  toJSON(...args: any[]): { [p: string]: any } {
+    const o: EntityDTO<this> = wrap(this, true).toObject(...args); // do not forget to pass rest params here
+    if (o['universityCampus']) 
+    {
+      o['university'] = o['universityCampus'] ? o['universityCampus']['university'] : null;
+      o['campus'] = o['universityCampus'] ? o['universityCampus']['campusLocation'] : null;
+    }
+
+    delete o['universityCampus'];
+
+    return o;
   }
 }
 

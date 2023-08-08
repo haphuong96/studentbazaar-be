@@ -6,6 +6,10 @@ import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
 import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
 import { CampusLocation } from '../market/entities/campus.entity';
 import { MarketService } from '../market/market.service';
+import { University } from '../market/entities/university.entity';
+import { CustomNotFoundException } from 'src/common/exceptions/custom.exception';
+import { ErrorCode } from 'src/common/exceptions/constants.exception';
+import { UniversityCampus } from '../market/entities/university-campus.entity';
 
 @Injectable()
 export class UserService {
@@ -40,13 +44,19 @@ export class UserService {
   }
 
   async getUserById(id: number): Promise<User> {
-    return await this.userRepository.findOneOrFail(id, {
+    const data = await this.userRepository.findOneOrFail(id, {
       failHandler: findOneOrFailBadRequestExceptionHandler,
-      populate: ['campus', 'university.campuses', 'defaultPickUpPoint'],
+      populate: [
+        'universityCampus.campusLocation',
+        'universityCampus.university',
+        'defaultPickUpPoint',
+      ],
     });
+    return data;
   }
 
   async createUser(user: CreateUserDto): Promise<User> {
+    console.log(user);
     const userCreate: User = this.userRepository.create({
       ...user,
       status: UserStatus.UNVERIFIED,
@@ -59,11 +69,29 @@ export class UserService {
   async updateUser(user: UpdateUserDto, userId: number): Promise<User> {
     const userUpdate: User = await this.getUserById(userId);
 
+    // update campus
     if (user.campusId) {
-      const campus: CampusLocation = await this.marketService.getCampusById(
-        user.campusId,
-      );
-      userUpdate.campus = campus;
+      // check user email address to get university
+      const university: University =
+        await this.marketService.getUniversityByEmailAddress(
+          userUpdate.emailAddress,
+        );
+
+      if (!university) {
+        throw new CustomNotFoundException(
+          'University not found',
+          ErrorCode.NOT_FOUND_ENTITY_NOT_FOUND,
+        );
+      }
+
+      // check campus
+      const universityCampus: UniversityCampus =
+        await this.marketService.getUniversityWithCampus(
+          university.id,
+          user.campusId,
+        );
+
+      userUpdate.universityCampus = universityCampus;
     }
 
     if (user.fullname) {
@@ -72,7 +100,9 @@ export class UserService {
 
     await this.em.flush();
 
-    return userUpdate;
+    const afterUpdateUser: User = await this.getUserById(userId);
+
+    return afterUpdateUser;
   }
 
   async activateAccount(userId: number): Promise<boolean> {

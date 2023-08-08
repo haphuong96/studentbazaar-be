@@ -13,6 +13,7 @@ import { EmailModule } from '../email/email.module';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { UserModule } from '../user/user.module';
 import { WsJwtAuthGuard } from './guards/ws-auth.guard';
+import { MarketModule } from '../market/market.module';
 
 @Module({
   controllers: [AuthController],
@@ -32,7 +33,8 @@ import { WsJwtAuthGuard } from './guards/ws-auth.guard';
       global: true,
     }),
     EmailModule,
-    UserModule
+    UserModule,
+    MarketModule
   ],
   exports: [WsJwtAuthGuard, JWTTokensUtility]
 })
