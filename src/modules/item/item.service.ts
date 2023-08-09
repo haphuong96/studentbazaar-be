@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Item, ItemStatus } from './entities/item.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
-import { CreateItemDto, SearchItemDto } from './dto/item.dto';
+import { CreateItemDto, SearchItemDto, UpdateItemDto } from './dto/item.dto';
 import { User } from '../user/entities/user.entity';
 import { ItemCategory } from './entities/category.entity';
 import { ItemCondition } from './entities/condition.entity';
@@ -19,6 +19,11 @@ import { resizeImageFromBuffer } from 'src/utils/img-resize.util';
 import { THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
 import { PickUpPoint } from '../market/entities/pickup-point.entity';
 import { MarketService } from '../market/market.service';
+import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
+import {
+  ErrorCode,
+  ErrorMessage,
+} from 'src/common/exceptions/constants.exception';
 
 @Injectable()
 export class ItemService {
@@ -60,7 +65,7 @@ export class ItemService {
       owner,
       category,
       condition,
-      status: ItemStatus.PUBLISHED,
+      status: item.status ? item.status : ItemStatus.PUBLISHED,
       itemName: item.itemName,
       itemDescription: item.itemDescription,
       itemPrice: item.price,
@@ -81,6 +86,7 @@ export class ItemService {
 
   async getItems(
     query: SearchItemDto,
+    isOwnerRequest: boolean = false,
   ): Promise<
     | { total: number; items: Item[] }
     | { nextCursor: number | string; items: Item[] }
@@ -98,6 +104,12 @@ export class ItemService {
         id: { $lt: query.nextCursor },
       });
     }
+
+    // only show items that are published if items are viewed publicly
+    if (!isOwnerRequest) {
+      whereConditions.$and.push({ status: ItemStatus.PUBLISHED });
+    }
+
     // Upon selecting a category, we want to show all items under that category and its subcategories
     if (query.categoryId) {
       whereConditions.$and.push({
@@ -155,13 +167,13 @@ export class ItemService {
     );
 
     /**
-     * return 
-     * - next cursor if count > limit, the last item in the array is the next cursor 
+     * return
+     * - next cursor if count > limit, the last item in the array is the next cursor
      * - else show empty to indicate no more items, return all items
      */
     return isLimitOffset
       ? { total: count, items }
-      : { nextCursor: count > query.limit? items.pop()?.id : '', items };
+      : { nextCursor: count > query.limit ? items.pop()?.id : '', items };
   }
 
   async getOneItem(id: number): Promise<Item> {
@@ -169,6 +181,26 @@ export class ItemService {
       populate: true,
       failHandler: findOneOrFailBadRequestExceptionHandler,
     });
+  }
+
+  async updateItem(item: UpdateItemDto, itemId: number, userId: number): Promise<Item> {
+    const itemToUpdate: Item = await this.getOneItem(itemId);
+
+    // Check if user is the owner of the item
+    if (itemToUpdate.owner.id !== userId) {
+      throw new CustomUnauthorizedException(
+        ErrorMessage.INVALID_USER,
+        ErrorCode.FORBIDDEN_INVALID_USER,
+      );
+    }
+
+    if (item.status) {
+      itemToUpdate.status = item.status;
+    }
+
+    await this.em.flush();
+
+    return itemToUpdate;
   }
 
   async uploadItemImage(

@@ -6,11 +6,14 @@ import { UpdateUserDto } from './dto/user.dto';
 import { serialize } from '@mikro-orm/core';
 import { Item } from '../item/entities/item.entity';
 import { ItemService } from '../item/item.service';
+import { University } from '../market/entities/university.entity';
+import { MarketService } from '../market/market.service';
 @Controller('me')
 export class MeController {
   constructor(
     private userService: UserService,
     private itemService: ItemService,
+    private marketService: MarketService,
   ) {}
 
   @Get('profile')
@@ -18,6 +21,15 @@ export class MeController {
     const user: ITokenPayload = request.user;
 
     return await this.userService.getUserById(user.sub);
+  }
+
+  @Get('university')
+  async getMyUniversity(@Req() request: RequestWithUser): Promise<University> {
+    const payload: ITokenPayload = request.user;
+    const user: User = await this.userService.getUserById(payload.sub);
+    return await this.marketService.getUniversityByEmailAddress(
+      user.emailAddress,
+    );
   }
 
   @Get('items')
@@ -33,7 +45,7 @@ export class MeController {
   > {
     const user: ITokenPayload = request.user;
 
-    return await this.itemService.getItems({ ownerId: user.sub });
+    return await this.itemService.getItems({ ownerId: user.sub }, true);
   }
 
   @Put('profile')

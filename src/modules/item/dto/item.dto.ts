@@ -1,5 +1,6 @@
 import { Image } from 'src/modules/img/image.entity';
 import { Transform } from 'class-transformer';
+import { ItemStatus } from '../entities/item.entity';
 
 export class CreateItemDto {
   itemName: string;
@@ -12,6 +13,11 @@ export class CreateItemDto {
     thumbnail: Image;
   }[];
   locationId: number;
+  status: ItemStatus;
+}
+
+export class UpdateItemDto {
+  status?: ItemStatus;
 }
 
 export class SearchItemDto {

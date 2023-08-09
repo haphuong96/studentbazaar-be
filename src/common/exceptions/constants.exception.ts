@@ -7,7 +7,8 @@ export enum ErrorMessage {
   UNAUTHORIZED = 'Unauthorized',
   INVALID_TOKEN = 'Invalid token',
   EMAIL_NOT_VERIFIED = 'Email not verified',
-  ERROR_UPLOAD_IMAGE = 'Error uploading image'
+  ERROR_UPLOAD_IMAGE = 'Error uploading image',
+  INVALID_USER = 'Invalid user',
 }
 
 export enum ErrorCode {
