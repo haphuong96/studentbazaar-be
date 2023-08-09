@@ -518,6 +518,15 @@
             "SUSPENDED"
           ],
           "mappedType": "enum"
+        },
+        "about_me": {
+          "name": "about_me",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "text"
         }
       },
       "name": "user",

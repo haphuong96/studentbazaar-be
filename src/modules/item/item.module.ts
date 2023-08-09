@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ItemController } from './item.controller';
 import { ItemService } from './item.service';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
@@ -16,7 +16,7 @@ import { MarketModule } from '../market/market.module';
 @Module({
   imports: [
     MikroOrmModule.forFeature([Item, ItemCategory, ItemCondition]),
-    UserModule,
+    forwardRef(() => UserModule),
     AzureBlobStorageClientModule,
     MarketModule
   ],
@@ -26,5 +26,6 @@ import { MarketModule } from '../market/market.module';
     ItemConditionController,
   ],
   providers: [ItemService, ItemCategoryService, ItemConditionService],
+  exports: [ItemService]
 })
 export class ItemModule {}

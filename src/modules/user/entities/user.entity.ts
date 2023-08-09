@@ -6,6 +6,7 @@ import {
   OneToMany,
   PrimaryKey,
   Property,
+  types,
   wrap,
 } from '@mikro-orm/core';
 import { PickUpPoint } from '../../market/entities/pickup-point.entity';
@@ -36,6 +37,9 @@ export class User {
 
   @Enum(() => UserStatus)
   status!: UserStatus;
+
+  @Property({ type: types.text })
+  aboutMe?: string;
 
   constructor(user: {
     id?: number;

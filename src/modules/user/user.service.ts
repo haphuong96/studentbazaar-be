@@ -48,9 +48,9 @@ export class UserService {
       failHandler: findOneOrFailBadRequestExceptionHandler,
       populate: [
         'universityCampus.campusLocation',
-        'universityCampus.university',
+        'universityCampus.university.campuses',
         'defaultPickUpPoint',
-        'universityCampus.pickUpPoints'
+        'universityCampus.pickUpPoints',
       ],
     });
     return data;
@@ -95,9 +95,8 @@ export class UserService {
       userUpdate.universityCampus = universityCampus;
     }
 
-    if (user.fullname) {
-      userUpdate.fullname = user.fullname;
-    }
+    userUpdate.fullname = user.fullname;
+    userUpdate.aboutMe = user.aboutMe;
 
     await this.em.flush();
 

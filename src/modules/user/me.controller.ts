@@ -4,15 +4,36 @@ import { ITokenPayload, RequestWithUser } from '../auth/auth.interface';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/user.dto';
 import { serialize } from '@mikro-orm/core';
+import { Item } from '../item/entities/item.entity';
+import { ItemService } from '../item/item.service';
 @Controller('me')
 export class MeController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private itemService: ItemService,
+  ) {}
 
   @Get('profile')
   async getMyProfile(@Req() request: RequestWithUser): Promise<User> {
     const user: ITokenPayload = request.user;
 
     return await this.userService.getUserById(user.sub);
+  }
+
+  @Get('items')
+  async getMyItems(@Req() request: RequestWithUser): Promise<
+    | {
+        total: number;
+        items: Item[];
+      }
+    | {
+        nextCursor: string | number;
+        items: Item[];
+      }
+  > {
+    const user: ITokenPayload = request.user;
+
+    return await this.itemService.getItems({ ownerId: user.sub });
   }
 
   @Put('profile')
