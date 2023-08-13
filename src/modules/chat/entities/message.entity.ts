@@ -15,7 +15,7 @@ export class Message {
   id!: number;
 
   @Property({ length: 255})
-  messsage!: string;
+  message!: string;
 
   @ManyToOne()
   conversation!: Conversation;

@@ -676,8 +676,8 @@
           "nullable": false,
           "mappedType": "integer"
         },
-        "messsage": {
-          "name": "messsage",
+        "message": {
+          "name": "message",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
@@ -1238,8 +1238,8 @@
           "nullable": false,
           "mappedType": "integer"
         },
-        "participant_id": {
-          "name": "participant_id",
+        "user_id": {
+          "name": "user_id",
           "type": "int",
           "unsigned": true,
           "autoincrement": false,
@@ -1261,10 +1261,10 @@
         },
         {
           "columnNames": [
-            "participant_id"
+            "user_id"
           ],
           "composite": false,
-          "keyName": "conversation_participant_participant_id_index",
+          "keyName": "conversation_participant_user_id_index",
           "primary": false,
           "unique": false
         },
@@ -1292,10 +1292,10 @@
           "referencedTableName": "conversation",
           "updateRule": "cascade"
         },
-        "conversation_participant_participant_id_foreign": {
-          "constraintName": "conversation_participant_participant_id_foreign",
+        "conversation_participant_user_id_foreign": {
+          "constraintName": "conversation_participant_user_id_foreign",
           "columnNames": [
-            "participant_id"
+            "user_id"
           ],
           "localTableName": "conversation_participant",
           "referencedColumnNames": [

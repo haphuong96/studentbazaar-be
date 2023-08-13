@@ -2,15 +2,18 @@ import {
   Entity,
   EntityDTO,
   Enum,
+  ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryKey,
   Property,
   types,
   wrap,
+  Collection
 } from '@mikro-orm/core';
 import { PickUpPoint } from '../../market/entities/pickup-point.entity';
 import { UniversityCampus } from '../../market/entities/university-campus.entity';
+import { Conversation } from '../../chat/entities/conversation.entity';
 
 @Entity()
 export class User {
@@ -40,6 +43,9 @@ export class User {
 
   @Property({ type: types.text })
   aboutMe?: string;
+
+  @ManyToMany({ entity: () => Conversation, mappedBy: 'participants'})
+  conversations = new Collection<Conversation>(this);
 
   constructor(user: {
     id?: number;

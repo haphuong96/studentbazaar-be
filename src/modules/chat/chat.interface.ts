@@ -1,6 +1,7 @@
 import { ITokenPayload } from "../auth/auth.interface";
 
-export interface ClientData {
-    user: ITokenPayload,
+export interface InboxPayload {
+    receiverId?: number,
+    conversationId?: number,
     message: string
 }

@@ -10,12 +10,13 @@ import { User } from '../../user/entities/user.entity';
 
 @Entity()
 export class ConversationParticipant {
-  @PrimaryKey()
-  id!: number;
-
   @ManyToOne()
   conversation!: Conversation;
 
-  @ManyToOne()
+  @ManyToOne({name: 'user_id'})
   participant!: User;
+
+  @PrimaryKey()
+  id!: number;
+
 }
