@@ -63,8 +63,6 @@ export class ChatGateway implements OnGatewayConnection {
       //   });
       // }
 
-
-
       // this.server.emit('users', users);
     } else {
       socket.disconnect();
@@ -81,11 +79,8 @@ export class ChatGateway implements OnGatewayConnection {
     // If authenticated, send message to all clients & store messages
     const user: User = socket['user'];
 
-    // const user: User = await this.userService.getUserById(userPayload.sub);
-    //create conversation if not exists
-
-    // console.log('receiverId ', data.receiverId);
-    //save message, if no conversation yet, create new conversation
+    // check conversation and save msg
+    // if no conversationId, check if conversation existed based on participants. If not, create new conversation
     const conversation: Conversation = data.conversationId
       ? await this.chatService.getConversationById(data.conversationId)
       : await this.chatService.createNewConversation([
@@ -93,23 +88,28 @@ export class ChatGateway implements OnGatewayConnection {
           data.receiverId,
         ]);
 
-    const message = this.chatService.saveMessage(
+    const message = await this.chatService.saveMessage(
       user,
       data.message,
       conversation,
     );
 
-    console.log('data', data);
-    console.log('from ', socket.id);
-    // socket.request.
-    socket.to(data.receiverId.toString()).emit('message', {
-      message: message,
-      from: socket.id,
-    });
+    // list of receivers "room"
+    const receivers: string[] = conversation.participants
+      .getItems()
+      .map((participant: User) => participant.id.toString());
 
-
-    // return {event: 'message', data: 'server hello' + data};
-
-    // client.emit('message', 'server hello' + data);
+    // console.log('data', data);
+    // console.log('from ', socket.id);
+    console.log('receivers ', receivers);
+    console.log('message ', message);
+    this.server.to(receivers).emit(
+      'message',
+      message,
+      // {
+      //   message: message,
+      //   from: user.id,
+      // }
+    );
   }
 }
