@@ -178,12 +178,23 @@ export class ItemService {
 
   async getOneItem(id: number): Promise<Item> {
     return await this.itemRepository.findOneOrFail(id, {
-      populate: true,
+      populate: [
+        'owner',
+        'owner.universityCampus.university',
+        'location',
+        'condition',
+        'img.image',
+        'img.thumbnail',
+      ],
       failHandler: findOneOrFailBadRequestExceptionHandler,
     });
   }
 
-  async updateItem(item: UpdateItemDto, itemId: number, userId: number): Promise<Item> {
+  async updateItem(
+    item: UpdateItemDto,
+    itemId: number,
+    userId: number,
+  ): Promise<Item> {
     const itemToUpdate: Item = await this.getOneItem(itemId);
 
     // Check if user is the owner of the item

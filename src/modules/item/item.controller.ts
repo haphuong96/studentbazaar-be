@@ -47,7 +47,10 @@ export class ItemController {
 
   @Get(':id')
   async getOneItem(@Param('id') id: number): Promise<Item> {
-    return await this.itemService.getOneItem(id);
+    console.log('getOneItem');
+    const res =  await this.itemService.getOneItem(id);
+    console.log('res ', res)
+    return res;
   }
 
   @Put(':id')
