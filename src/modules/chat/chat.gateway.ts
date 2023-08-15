@@ -82,11 +82,15 @@ export class ChatGateway implements OnGatewayConnection {
     // check conversation and save msg
     // if no conversationId, check if conversation existed based on participants. If not, create new conversation
     const conversation: Conversation = data.conversationId
-      ? await this.chatService.getConversationById(data.conversationId)
-      : await this.chatService.createNewConversation([
+      ? await this.chatService.getConversationById(data.conversationId, user.id)
+      : (await this.chatService.getOneToOneConversationByParticipants([
           user.id,
           data.receiverId,
-        ]);
+        ])) ||
+        (await this.chatService.createNewConversation([
+          user.id,
+          data.receiverId,
+        ]));
 
     const message = await this.chatService.saveMessage(
       user,
@@ -103,7 +107,7 @@ export class ChatGateway implements OnGatewayConnection {
     // console.log('from ', socket.id);
     console.log('receivers ', receivers);
     console.log('message ', message);
-    this.server.to(receivers).emit(
+    this.server.to(user.id.toString()).to(receivers).emit(
       'message',
       message,
       // {

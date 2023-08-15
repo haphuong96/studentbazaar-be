@@ -9,9 +9,12 @@ import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
 import { findOneOrFailNotFoundExceptionHandler } from '../../utils/exception-handler.util';
 import { Message, MessageType } from './entities/message.entity';
-import { ErrorCode, ErrorMessage } from 'src/common/exceptions/constants.exception';
+import {
+  ErrorCode,
+  ErrorMessage,
+} from 'src/common/exceptions/constants.exception';
 import { ConversationParticipant } from './entities/participant.entity';
-import { Loaded, wrap } from '@mikro-orm/core';
+import { Loaded, WrappedEntity, wrap } from '@mikro-orm/core';
 import { CustomForbiddenException } from 'src/common/exceptions/custom.exception';
 
 @Injectable()
@@ -45,14 +48,7 @@ export class ChatService {
    * @param participantIds
    * @returns
    */
-  async createNewConversation(participantIds: number[]) {
-    const getConversationByParticipants: Conversation =
-      await this.getOneToOneConversationByParticipants(participantIds);
-
-    if (getConversationByParticipants) {
-      return getConversationByParticipants;
-    }
-
+  async createNewConversation(participantIds: number[]): Promise<Conversation> {
     const conversation: Conversation = this.em.create(Conversation, {});
 
     const conversationParticipants: ConversationParticipant[] = [];
@@ -144,13 +140,16 @@ export class ChatService {
         participants: {
           $eq: userId,
         },
+        lastMessage: {
+          $exists: true,
+        },
       },
       {
         populate: ['participants', 'lastMessage'],
       },
     );
 
-    // Get last message of each conversation
+    // Get last message of each conversation + remove current user from participants
     const conversationTransform: Promise<Loaded<Message | User, never>[]>[] =
       [];
 
@@ -195,11 +194,45 @@ export class ChatService {
     return conversations;
   }
 
-  async getConversationById(conversationId: number): Promise<Conversation> {
-    return this.em.findOneOrFail(Conversation, conversationId, {
-      populate: ['participants'],
-      failHandler: findOneOrFailNotFoundExceptionHandler,
+  async getConversationById(
+    conversationId: number,
+    requestorId: number,
+  ): Promise<Conversation> {
+    console.log('conversationId ', conversationId);
+    const conversation: Conversation = await this.em.findOneOrFail(
+      Conversation,
+      conversationId,
+      {
+        populate: ['participants'],
+        failHandler: findOneOrFailNotFoundExceptionHandler,
+      },
+    );
+
+    // check if requestor is in conversation. If not, user doesn't have permission to view conversation
+    const requestorInConversation: boolean =
+      conversation.participants.isInitialized() &&
+      conversation.participants
+        .getItems()
+        .some((participant: User) => participant.id === requestorId);
+
+    if (!requestorInConversation) {
+      throw new CustomForbiddenException(
+        ErrorMessage.ACCESS_DENIED,
+        ErrorCode.FORBIDDEN_ACCESS_DENIED,
+      );
+    }
+
+    // remove requestor from participants
+    await conversation.participants.matching({
+      where: { id: { $ne: requestorId } },
+      store: true,
     });
+
+    wrap(conversation).assign({
+      isNew: (await conversation.messages.loadCount()) ? false : true,
+    });
+    
+    return conversation;
   }
 
   async getMessagesByConversationId(
@@ -208,28 +241,19 @@ export class ChatService {
     limit?: number,
     offset?: number,
   ): Promise<Message[]> {
-    // check if requestor is in conversation. If not, user doesn't have permission to view messages
     const conversation: Conversation = await this.getConversationById(
       conversationId,
+      requestorId,
     );
 
-    const requestorInConversation: boolean =
-      conversation.participants.isInitialized() &&
-      conversation.participants
-        .getItems()
-        .some((participant: User) => participant.id === requestorId);
-    
-    if (!requestorInConversation) {
-      throw new CustomForbiddenException(
-        ErrorMessage.ACCESS_DENIED,
-        ErrorCode.FORBIDDEN_ACCESS_DENIED,
-      )
-    }
-
-    return this.em.find(Message, {
-      conversation: conversationId,
-    }, {
-      populate: ['sender']
-    });
+    return this.em.find(
+      Message,
+      {
+        conversation: conversationId,
+      },
+      {
+        populate: ['sender'],
+      },
+    );
   }
 }

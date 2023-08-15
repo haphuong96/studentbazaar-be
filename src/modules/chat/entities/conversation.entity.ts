@@ -4,6 +4,7 @@ import {
   ManyToMany,
   OneToMany,
   Collection,
+  Property
 } from '@mikro-orm/core';
 import { ConversationParticipant } from './participant.entity';
 import { User } from '../../user/entities/user.entity';
@@ -20,7 +21,9 @@ export class Conversation {
   @OneToMany({ mappedBy: 'conversation' })
   messages = new Collection<Message>(this);
 
-
   @OneToMany( { mappedBy: 'conversation', persist: false })
   lastMessage = new Collection<Message>(this);
+
+  @Property( { persist: false })
+  isNew?: boolean;
 }
