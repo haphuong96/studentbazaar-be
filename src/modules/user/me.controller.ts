@@ -48,6 +48,13 @@ export class MeController {
     return await this.itemService.getItems({ ownerId: user.sub }, true);
   }
 
+  @Get('item-favorites')
+  async getMyFavoriteItems(@Req() request: RequestWithUser): Promise<Item[]> {
+    const user: ITokenPayload = request.user;
+
+    return await this.userService.getFavoriteItems(user.sub);
+  }
+
   @Put('profile')
   async updateMyProfile(
     @Req() request: RequestWithUser,

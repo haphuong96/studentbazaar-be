@@ -11,7 +11,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { ItemService } from './item.service';
-import { ITokenPayload } from '../auth/auth.interface';
+import { ITokenPayload, RequestWithUser } from '../auth/auth.interface';
 import { CreateItemDto, SearchItemDto, UpdateItemDto } from './dto/item.dto';
 import { Item } from './entities/item.entity';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
@@ -46,10 +46,13 @@ export class ItemController {
   }
 
   @Get(':id')
-  async getOneItem(@Param('id') id: number): Promise<Item> {
-    console.log('getOneItem');
-    const res =  await this.itemService.getOneItem(id);
-    console.log('res ', res)
+  async getOneItem(
+    @Req() request: RequestWithUser,
+    @Param('id') id: number,
+  ): Promise<Item> {
+    const user: ITokenPayload = request.user;
+
+    const res = await this.itemService.getOneItem(id, user.sub);
     return res;
   }
 
@@ -62,6 +65,16 @@ export class ItemController {
     const user: ITokenPayload = request['user'];
 
     return await this.itemService.updateItem(updateItemDto, id, user.sub);
+  }
+  
+  @Post(':id/user_favorites/toggle')
+  async toggleUserFavoriteItem(
+    @Req() request: Request,
+    @Param('id') id: number,
+  ) : Promise<Item> {
+    const user: ITokenPayload = request['user'];
+
+    return await this.itemService.toggleUserFavoriteItem(id, user.sub);
   }
 
   @Post('images')

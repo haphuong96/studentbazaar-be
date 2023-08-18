@@ -14,6 +14,7 @@ import {
 import { PickUpPoint } from '../../market/entities/pickup-point.entity';
 import { UniversityCampus } from '../../market/entities/university-campus.entity';
 import { Conversation } from '../../chat/entities/conversation.entity';
+import { Item } from '../../item/entities/item.entity';
 
 @Entity()
 export class User {
@@ -46,6 +47,9 @@ export class User {
 
   @ManyToMany({ entity: () => Conversation, mappedBy: 'participants'})
   conversations = new Collection<Conversation>(this);
+
+  @ManyToMany({ pivotTable: 'user_favorite_item'})
+  favoriteItems = new Collection<Item>(this);
 
   constructor(user: {
     id?: number;

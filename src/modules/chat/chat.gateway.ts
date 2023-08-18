@@ -47,7 +47,6 @@ export class ChatGateway implements OnGatewayConnection {
     const user: User = await this.chatService.retrieveUserFromSocket(socket);
 
     if (user) {
-      console.log(user);
       socket['user'] = { ...user };
 
       // join user to "user" room
@@ -102,18 +101,11 @@ export class ChatGateway implements OnGatewayConnection {
     const receivers: string[] = conversation.participants
       .getItems()
       .map((participant: User) => participant.id.toString());
-
-    // console.log('data', data);
-    // console.log('from ', socket.id);
-    console.log('receivers ', receivers);
-    console.log('message ', message);
+    
+    // send message to all receivers and sender
     this.server.to(user.id.toString()).to(receivers).emit(
       'message',
       message,
-      // {
-      //   message: message,
-      //   from: user.id,
-      // }
     );
   }
 }

@@ -10,6 +10,7 @@ import { University } from '../market/entities/university.entity';
 import { CustomNotFoundException } from 'src/common/exceptions/custom.exception';
 import { ErrorCode } from 'src/common/exceptions/constants.exception';
 import { UniversityCampus } from '../market/entities/university-campus.entity';
+import { Item } from '../item/entities/item.entity';
 
 @Injectable()
 export class UserService {
@@ -112,5 +113,16 @@ export class UserService {
     await this.em.flush();
 
     return true;
+  }
+
+  async getFavoriteItems(userId: number): Promise<Item[]> {
+    const user : User = await this.userRepository.findOneOrFail(userId, {
+      populate: ['favoriteItems', 'favoriteItems.owner', 'favoriteItems.img.image', 'favoriteItems.img.thumbnail'],
+      orderBy: {
+        id: 'DESC',
+      }
+    });
+
+    return user.favoriteItems.getItems();
   }
 }

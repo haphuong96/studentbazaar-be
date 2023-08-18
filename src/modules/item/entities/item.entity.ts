@@ -2,11 +2,12 @@ import {
   types,
   Entity,
   ManyToOne,
+  ManyToMany,
   PrimaryKey,
   Property,
   OneToMany,
   Enum,
-  Collection
+  Collection,
 } from '@mikro-orm/core';
 import { User } from '../../user/entities/user.entity';
 import { ItemCategory } from './category.entity';
@@ -51,6 +52,15 @@ export class Item {
 
   @Property({ type: types.datetime, defaultRaw: `current_timestamp()` })
   lastUpdatedDatetime!: Date;
+
+  @ManyToMany({ mappedBy: 'favoriteItems' })
+  favoritedBy = new Collection<User>(this);
+
+  @Property({ persist: false })
+  isFavorite?: boolean;
+
+  @Property({ persist: false })
+  favoriteCount?: number;
 
   constructor(item: {
     id?: number;

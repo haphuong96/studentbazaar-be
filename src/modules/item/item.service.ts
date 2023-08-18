@@ -6,7 +6,7 @@ import { CreateItemDto, SearchItemDto, UpdateItemDto } from './dto/item.dto';
 import { User } from '../user/entities/user.entity';
 import { ItemCategory } from './entities/category.entity';
 import { ItemCondition } from './entities/condition.entity';
-import { FilterQuery } from '@mikro-orm/core';
+import { FilterQuery, wrap } from '@mikro-orm/core';
 import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
 import { BlockBlobClient } from '@azure/storage-blob';
 import { ItemImage } from './entities/item-image.entity';
@@ -153,6 +153,8 @@ export class ItemService {
       {
         populate: [
           'owner',
+          'owner.universityCampus.university',
+          'owner.universityCampus.campusLocation',
           'category',
           'condition',
           'img.image',
@@ -166,6 +168,15 @@ export class ItemService {
       },
     );
 
+    // count number of favorites for each item
+    const itemsWithFavoriteCount: Promise<void>[] = items.map(async (item) => {
+      wrap(item).assign({
+        favoriteCount: await item.favoritedBy.loadCount(),
+      });
+    });
+
+    await Promise.all(itemsWithFavoriteCount);
+
     /**
      * return
      * - next cursor if count > limit, the last item in the array is the next cursor
@@ -176,8 +187,11 @@ export class ItemService {
       : { nextCursor: count > query.limit ? items.pop()?.id : '', items };
   }
 
-  async getOneItem(id: number): Promise<Item> {
-    return await this.itemRepository.findOneOrFail(id, {
+  async getOneItem(itemId: number, userId?: number): Promise<Item> {
+    console.log('itemId ', itemId);
+    console.log('userId ', userId);
+
+    const itemFound: Item = await this.itemRepository.findOneOrFail(itemId, {
       populate: [
         'owner',
         'owner.universityCampus.university',
@@ -188,6 +202,19 @@ export class ItemService {
       ],
       failHandler: findOneOrFailBadRequestExceptionHandler,
     });
+
+    if (userId) {
+      // check if user added this item to favorites
+      const user: User = await this.userService.getUserById(userId);
+
+      await user.favoriteItems.init();
+
+      wrap(itemFound).assign({
+        isFavorite: user.favoriteItems.contains(itemFound) ? true : false,
+      });
+    }
+
+    return itemFound;
   }
 
   async updateItem(
@@ -278,5 +305,27 @@ export class ItemService {
     this.em.persistAndFlush(imagesToPersist);
 
     return imageUrls;
+  }
+
+  async toggleUserFavoriteItem(itemId: number, userId: number): Promise<Item> {
+    const item: Item = await this.getOneItem(itemId);
+
+    const user: User = await this.userService.getUserById(userId);
+
+    await Promise.all([user.favoriteItems.init()]);
+
+    if (user.favoriteItems.contains(item)) {
+      user.favoriteItems.remove(item);
+    } else {
+      user.favoriteItems.add(item);
+    }
+
+    await this.em.flush();
+
+    wrap(item).assign({
+      isFavorite: user.favoriteItems.contains(item) ? true : false,
+    });
+
+    return item;
   }
 }
