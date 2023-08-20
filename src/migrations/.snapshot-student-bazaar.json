@@ -706,13 +706,14 @@
         },
         "message_type": {
           "name": "message_type",
-          "type": "enum('message')",
+          "type": "enum('message', 'image')",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
           "enumItems": [
-            "message"
+            "message",
+            "image"
           ],
           "mappedType": "enum"
         },

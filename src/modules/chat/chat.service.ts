@@ -1,21 +1,20 @@
+import { Loaded, wrap } from '@mikro-orm/core';
+import { EntityManager, QueryBuilder } from '@mikro-orm/mysql';
 import { Injectable } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { JWTTokensUtility } from '../auth/utils/jwt-token.util';
-import { ITokenPayload } from '../auth/auth.interface';
-import { WsException } from '@nestjs/websockets';
-import { EntityManager, QueryBuilder } from '@mikro-orm/mysql';
-import { Conversation } from './entities/conversation.entity';
-import { UserService } from '../user/user.service';
-import { User } from '../user/entities/user.entity';
-import { findOneOrFailNotFoundExceptionHandler } from '../../utils/exception-handler.util';
-import { Message, MessageType } from './entities/message.entity';
 import {
   ErrorCode,
   ErrorMessage,
 } from 'src/common/exceptions/constants.exception';
-import { ConversationParticipant } from './entities/participant.entity';
-import { Loaded, WrappedEntity, wrap } from '@mikro-orm/core';
 import { CustomForbiddenException } from 'src/common/exceptions/custom.exception';
+import { findOneOrFailNotFoundExceptionHandler } from '../../utils/exception-handler.util';
+import { ITokenPayload } from '../auth/auth.interface';
+import { JWTTokensUtility } from '../auth/utils/jwt-token.util';
+import { User } from '../user/entities/user.entity';
+import { UserService } from '../user/user.service';
+import { Conversation } from './entities/conversation.entity';
+import { Message, MessageType } from './entities/message.entity';
+import { ConversationParticipant } from './entities/participant.entity';
 
 @Injectable()
 export class ChatService {
@@ -27,10 +26,11 @@ export class ChatService {
   async saveMessage(
     sender: User,
     message: string,
+    messageType: MessageType,
     conversation: Conversation,
   ): Promise<Message> {
     const newMessage: Message = this.em.create(Message, {
-      messageType: MessageType.MESSAGE,
+      messageType: messageType || MessageType.MESSAGE,
       sender: sender.id,
       message,
       conversation: conversation.id,
@@ -231,7 +231,7 @@ export class ChatService {
     wrap(conversation).assign({
       isNew: (await conversation.messages.loadCount()) ? false : true,
     });
-    
+
     return conversation;
   }
 

@@ -1,3 +1,4 @@
+import { MessageType } from './entities/message.entity';
 import {
   MessageBody,
   SubscribeMessage,
@@ -94,6 +95,7 @@ export class ChatGateway implements OnGatewayConnection {
     const message = await this.chatService.saveMessage(
       user,
       data.message,
+      data.messageType,
       conversation,
     );
 
@@ -101,11 +103,8 @@ export class ChatGateway implements OnGatewayConnection {
     const receivers: string[] = conversation.participants
       .getItems()
       .map((participant: User) => participant.id.toString());
-    
+
     // send message to all receivers and sender
-    this.server.to(user.id.toString()).to(receivers).emit(
-      'message',
-      message,
-    );
+    this.server.to(user.id.toString()).to(receivers).emit('message', message);
   }
 }

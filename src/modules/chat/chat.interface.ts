@@ -1,7 +1,8 @@
-import { ITokenPayload } from "../auth/auth.interface";
+import { MessageType } from './entities/message.entity';
 
 export interface InboxPayload {
-    receiverId?: number,
-    conversationId?: number,
-    message: string
+  receiverId?: number;
+  conversationId?: number;
+  message: string;
+  messageType: MessageType;
 }

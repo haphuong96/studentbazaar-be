@@ -14,7 +14,7 @@ export class Message {
   @PrimaryKey()
   id!: number;
 
-  @Property({ length: 255})
+  @Property({ length: 255 })
   message!: string;
 
   @ManyToOne()
@@ -31,5 +31,6 @@ export class Message {
 }
 
 export enum MessageType {
-    MESSAGE = 'message',
+  MESSAGE = 'message',
+  IMAGE = 'image',
 }
