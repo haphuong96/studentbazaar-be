@@ -1,21 +1,22 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
   Post,
+  Put,
   Query,
   Req,
-  Param,
   UploadedFiles,
   UseInterceptors,
-  Put,
 } from '@nestjs/common';
-import { ItemService } from './item.service';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ITokenPayload, RequestWithUser } from '../auth/auth.interface';
+import { Image } from '../img/image.entity';
 import { CreateItemDto, SearchItemDto, UpdateItemDto } from './dto/item.dto';
 import { Item } from './entities/item.entity';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { Image } from '../img/image.entity';
+import { ItemService } from './item.service';
 
 @Controller('items')
 export class ItemController {
@@ -66,12 +67,12 @@ export class ItemController {
 
     return await this.itemService.updateItem(updateItemDto, id, user.sub);
   }
-  
+
   @Post(':id/user_favorites/toggle')
   async toggleUserFavoriteItem(
     @Req() request: Request,
     @Param('id') id: number,
-  ) : Promise<Item> {
+  ): Promise<Item> {
     const user: ITokenPayload = request['user'];
 
     return await this.itemService.toggleUserFavoriteItem(id, user.sub);
@@ -88,5 +89,14 @@ export class ItemController {
     }[]
   > {
     return await this.itemService.uploadItemImage(files);
+  }
+
+  @Delete(':id')
+  async deleteItem(
+    @Req() request: Request,
+    @Param('id') id: number,
+  ): Promise<boolean> {
+    const user: ITokenPayload = request['user'];
+    return await this.itemService.deleteItem(user.username, id);
   }
 }

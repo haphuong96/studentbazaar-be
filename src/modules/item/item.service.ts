@@ -1,29 +1,29 @@
-import { Injectable } from '@nestjs/common';
-import { Item, ItemStatus } from './entities/item.entity';
-import { InjectRepository } from '@mikro-orm/nestjs';
-import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
-import { CreateItemDto, SearchItemDto, UpdateItemDto } from './dto/item.dto';
-import { User } from '../user/entities/user.entity';
-import { ItemCategory } from './entities/category.entity';
-import { ItemCondition } from './entities/condition.entity';
-import { FilterQuery, wrap } from '@mikro-orm/core';
-import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
 import { BlockBlobClient } from '@azure/storage-blob';
-import { ItemImage } from './entities/item-image.entity';
-import { UserService } from '../user/user.service';
-import { ItemCategoryService } from './category.service';
-import { ItemConditionService } from './condition.service';
-import { ImageContainerClientService } from '../azure-blob-storage/img-container-client.service';
-import { Image } from '../img/image.entity';
-import { resizeImageFromBuffer } from 'src/utils/img-resize.util';
-import { THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
-import { PickUpPoint } from '../market/entities/pickup-point.entity';
-import { MarketService } from '../market/market.service';
-import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
+import { FilterQuery, wrap } from '@mikro-orm/core';
+import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   ErrorCode,
   ErrorMessage,
 } from 'src/common/exceptions/constants.exception';
+import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
+import { THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
+import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
+import { resizeImageFromBuffer } from 'src/utils/img-resize.util';
+import { ImageContainerClientService } from '../azure-blob-storage/img-container-client.service';
+import { Image } from '../img/image.entity';
+import { PickUpPoint } from '../market/entities/pickup-point.entity';
+import { MarketService } from '../market/market.service';
+import { User } from '../user/entities/user.entity';
+import { UserService } from '../user/user.service';
+import { ItemCategoryService } from './category.service';
+import { ItemConditionService } from './condition.service';
+import { CreateItemDto, SearchItemDto, UpdateItemDto } from './dto/item.dto';
+import { ItemCategory } from './entities/category.entity';
+import { ItemCondition } from './entities/condition.entity';
+import { ItemImage } from './entities/item-image.entity';
+import { Item, ItemStatus } from './entities/item.entity';
 
 @Injectable()
 export class ItemService {
@@ -86,7 +86,7 @@ export class ItemService {
 
   async getItems(
     query: SearchItemDto,
-    isOwnerRequest: boolean = false,
+    isOwnerRequest = false,
   ): Promise<
     | { total: number; items: Item[] }
     | { nextCursor: number | string; items: Item[] }
@@ -327,5 +327,20 @@ export class ItemService {
     });
 
     return item;
+  }
+
+  async deleteItem(userName: string, itemId: number): Promise<boolean> {
+    const item: Item = await this.getOneItem(itemId);
+
+    const user: User = await this.userService.getUserByUsername(userName);
+    if (!item) {
+      throw new BadRequestException('Item does not exist!');
+    }
+    if (user.id !== item.owner.id) {
+      throw new BadRequestException('You cannot delete your not item');
+    }
+
+    await this.itemRepository.nativeDelete({ id: itemId });
+    return true;
   }
 }
