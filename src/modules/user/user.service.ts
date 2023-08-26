@@ -11,6 +11,7 @@ import { CustomNotFoundException } from 'src/common/exceptions/custom.exception'
 import { ErrorCode } from 'src/common/exceptions/constants.exception';
 import { UniversityCampus } from '../market/entities/university-campus.entity';
 import { Item } from '../item/entities/item.entity';
+import { wrap } from '@mikro-orm/core';
 
 @Injectable()
 export class UserService {
@@ -123,6 +124,16 @@ export class UserService {
       }
     });
 
-    return user.favoriteItems.getItems();
+    const items : Item[] = user.favoriteItems.getItems();
+    
+    const countFavoriteTasks: Promise<void>[] = items.map(async (item) => {
+      wrap(item).assign({
+        favoriteCount: await item.favoritedBy.loadCount(),
+      });
+    });
+
+    await Promise.all(countFavoriteTasks);
+    
+    return items;
   }
 }

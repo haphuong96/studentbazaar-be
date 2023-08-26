@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@mikro-orm/nestjs';
-import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
+import {
+  AbstractSqlConnection,
+  EntityManager,
+  EntityRepository,
+} from '@mikro-orm/mysql';
 import { FilterQuery, wrap } from '@mikro-orm/core';
 import { ItemCategory } from './entities/category.entity';
 import { nestChildrenEntitiesUtil } from 'src/utils/nest-children-entities.util';
 import { CustomBadRequestException } from 'src/common/exceptions/custom.exception';
-import { findOneOrFailBadRequestExceptionHandler, findOneOrFailNotFoundExceptionHandler } from 'src/utils/exception-handler.util';
+import {
+  findOneOrFailBadRequestExceptionHandler,
+  findOneOrFailNotFoundExceptionHandler,
+} from 'src/utils/exception-handler.util';
 
 @Injectable()
 export class ItemCategoryService {
@@ -22,10 +29,14 @@ export class ItemCategoryService {
     return nestChildrenEntitiesUtil(catsFound);
   }
 
-  async getOneItemCategory(search: {path?: string, id?: number}): Promise<ItemCategory> {
+  async getOneItemCategory(search: {
+    path?: string;
+    id?: number;
+  }): Promise<ItemCategory> {
+    const whereConditions: FilterQuery<ItemCategory> = search.id
+      ? { id: search.id }
+      : { path: search.path };
 
-    const whereConditions: FilterQuery<ItemCategory> = search.id ? { id: search.id } : { path: search.path };
-    
     const catFound: ItemCategory = await this.itemCatRepository.findOneOrFail(
       whereConditions,
       {
@@ -49,4 +60,41 @@ export class ItemCategoryService {
     });
   }
 
+  /**
+   * Get item category and all subcategories. Result is union.
+   * @param id
+   * @returns
+   */
+  async getItemCategoryTreeByCategoryId(
+    categoryId: number,
+  ): Promise<ItemCategory[]> {
+
+    const connection: AbstractSqlConnection = this.em.getConnection();
+
+    const query = `
+                  WITH RECURSIVE parent_category AS ( 
+                      SELECT 
+                        * 
+                      FROM 
+                        item_category parent 
+                      WHERE 
+                        parent.id = ?
+                      UNION ALL
+                      SELECT 
+                        children.* 
+                      FROM 
+                        parent_category parent, 
+                        item_category children
+                      WHERE 
+                        children.parent_id = parent.id
+                  )
+                  SELECT * from parent_category;
+                  `;
+
+    const res = await connection.execute(query, [categoryId]);
+
+    const itemCats = res.map((itemCat) => this.em.map(ItemCategory, itemCat));
+
+    return itemCats;
+  }
 }

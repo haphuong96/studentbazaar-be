@@ -111,12 +111,15 @@ export class ItemService {
     }
 
     // Upon selecting a category, we want to show all items under that category and its subcategories
+    // find all subcategories of the selected category
+    const categoryTree: ItemCategory[] =
+      await this.itemCatService.getItemCategoryTreeByCategoryId(
+        query.categoryId,
+      );
+
     if (query.categoryId) {
       whereConditions.$and.push({
-        $or: [
-          { category: query.categoryId },
-          { category: { parent: query.categoryId } },
-        ],
+        category: { $in: categoryTree },
       });
     }
 
