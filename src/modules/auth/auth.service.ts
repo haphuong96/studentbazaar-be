@@ -198,7 +198,7 @@ export class AuthService {
     if (auth) {
       await this.emailService.sendMail({
         subject: 'Verify your email',
-        to: 'tnguyen09@qub.ac.uk',
+        to: emailAddress,
         from: process.env.EMAIL,
         html: this.emailTemplate.getAccountVerificationEmailTemplate(
           auth.token,

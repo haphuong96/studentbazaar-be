@@ -10,6 +10,7 @@ import { UserModule } from './modules/user/user.module';
 import { AzureBlobStorageClientModule } from './modules/azure-blob-storage/blob-storage.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { MarketModule } from './modules/market/market.module';
+import { GoogleOauth2Module } from './modules/google-oauth2/oauth2.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { MarketModule } from './modules/market/market.module';
     ItemModule,
     UserModule,
     ChatModule,
-    MarketModule
+    MarketModule,
+    GoogleOauth2Module
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Param, Query, Body, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  Body,
+  Req,
+  Redirect,
+} from '@nestjs/common';
 import { University } from '../market/entities/university.entity';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterUserDto } from './dto/signup.dto';
@@ -11,14 +20,16 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Public()
-  @Get('signup')
-  async checkEmailAddress(@Query('email') email: string): Promise<University> {
+  @Post('email/validate')
+  async checkEmailAddress(@Body('email') email: string): Promise<University> {
     return this.authService.checkEmailAddress(email);
   }
 
   @Public()
   @Post('signup')
-  async register(@Body() registerUserDto: RegisterUserDto): Promise<User> {
+  async register(
+    @Body() registerUserDto: RegisterUserDto,
+  ): Promise<User> {
     const newUser: User = await this.authService.registerUser(registerUserDto);
 
     await this.authService.sendVerificationEmail(newUser.emailAddress);
@@ -36,8 +47,7 @@ export class AuthController {
   @Public()
   @Post('email/resend-verification')
   async sendVerificationEmail(@Body('email') email: string): Promise<void> {
-    const sent = await this.authService.sendVerificationEmail(email);
-    return;
+    return await this.authService.sendVerificationEmail(email);
   }
 
   @Public()

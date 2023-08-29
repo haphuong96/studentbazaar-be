@@ -8,6 +8,7 @@ import {
   OneToMany,
   Enum,
   Collection,
+  Cascade,
 } from '@mikro-orm/core';
 import { User } from '../../user/entities/user.entity';
 import { ItemCategory } from './category.entity';
@@ -32,7 +33,7 @@ export class Item {
   @Enum(() => ItemStatus)
   status!: ItemStatus;
 
-  @OneToMany({ mappedBy: 'item' })
+  @OneToMany({ mappedBy: 'item', cascade: [Cascade.REMOVE] })
   img? = new Collection<ItemImage>(this);
 
   @Property({ length: 255 })

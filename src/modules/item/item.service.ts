@@ -334,15 +334,16 @@ export class ItemService {
 
   async deleteItem(userName: string, itemId: number): Promise<boolean> {
     const item: Item = await this.getOneItem(itemId);
-
-    const user: User = await this.userService.getUserByUsername(userName);
     if (!item) {
       throw new BadRequestException('Item does not exist!');
     }
+
+    const user: User = await this.userService.getUserByUsername(userName);
     if (user.id !== item.owner.id) {
       throw new BadRequestException('You cannot delete your not item');
     }
 
+    // await this.em.removeAndFlush(item);
     await this.itemRepository.nativeDelete({ id: itemId });
     return true;
   }
