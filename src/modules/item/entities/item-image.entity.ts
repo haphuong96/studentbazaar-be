@@ -9,7 +9,7 @@ import {
   EntityDTO
 } from '@mikro-orm/core';
 import { Item } from './item.entity';
-import { Image } from '../../img/image.entity';
+import { AzureStorageBlob } from '../../azure-blob-storage/blob.entity';
 
 @Entity()
 export class ItemImage {
@@ -17,10 +17,10 @@ export class ItemImage {
   id!: number;
 
   @OneToOne()
-  image!: Image;
+  image!: AzureStorageBlob;
 
   @OneToOne()
-  thumbnail!: Image;
+  thumbnail!: AzureStorageBlob;
 
   @ManyToOne()
   item!: Item;

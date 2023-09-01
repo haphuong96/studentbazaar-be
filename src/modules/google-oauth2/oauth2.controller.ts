@@ -20,6 +20,7 @@ export class GoogleOAuth2Controller {
     };
   }
 
+  @Public()
   @Get('oauth2callback')
   async callbackOauth(@Query() query: { error?: any; code?: string }) {
     if (query.error) {
@@ -30,7 +31,9 @@ export class GoogleOAuth2Controller {
         query.code,
       );
       // save tokens
-      return this.googleOauth2Service.saveTokens(tokens);
+      this.googleOauth2Service.saveTokens(tokens);
+
+      return "<h2>Successful authentication!</h2> You can now close this window.";
     }
   }
 }

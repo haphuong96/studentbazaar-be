@@ -78,7 +78,7 @@ export class ItemCategoryService {
                       FROM 
                         item_category parent 
                       WHERE 
-                        parent.id = ?
+                        id = ?
                       UNION ALL
                       SELECT 
                         children.* 

@@ -12,6 +12,42 @@
           "nullable": false,
           "mappedType": "integer"
         },
+        "blob_name": {
+          "name": "blob_name",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "text"
+        }
+      },
+      "name": "azure_storage_blob",
+      "indexes": [
+        {
+          "keyName": "PRIMARY",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "unsigned": true,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
         "campus_name": {
           "name": "campus_name",
           "type": "varchar(255)",
@@ -51,42 +87,6 @@
         }
       },
       "name": "conversation",
-      "indexes": [
-        {
-          "keyName": "PRIMARY",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {}
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "unsigned": true,
-          "autoincrement": true,
-          "primary": true,
-          "nullable": false,
-          "mappedType": "integer"
-        },
-        "img_path": {
-          "name": "img_path",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        }
-      },
-      "name": "image",
       "indexes": [
         {
           "keyName": "PRIMARY",
@@ -1089,7 +1089,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "image",
+          "referencedTableName": "azure_storage_blob",
           "updateRule": "cascade"
         },
         "item_image_thumbnail_id_foreign": {
@@ -1101,7 +1101,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "image",
+          "referencedTableName": "azure_storage_blob",
           "updateRule": "cascade"
         },
         "item_image_item_id_foreign": {

@@ -11,8 +11,8 @@ import { CustomUnauthorizedException } from 'src/common/exceptions/custom.except
 import { THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
 import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
 import { resizeImageFromBuffer } from 'src/utils/img-resize.util';
-import { ImageContainerClientService } from '../azure-blob-storage/img-container-client.service';
-import { Image } from '../img/image.entity';
+import { ImageBlobClientService } from '../azure-blob-storage/blob-client.service';
+import { AzureStorageBlob } from '../azure-blob-storage/blob.entity';
 import { PickUpPoint } from '../market/entities/pickup-point.entity';
 import { MarketService } from '../market/market.service';
 import { User } from '../user/entities/user.entity';
@@ -24,6 +24,7 @@ import { ItemCategory } from './entities/category.entity';
 import { ItemCondition } from './entities/condition.entity';
 import { ItemImage } from './entities/item-image.entity';
 import { Item, ItemStatus } from './entities/item.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ItemService {
@@ -39,7 +40,9 @@ export class ItemService {
 
     private readonly em: EntityManager,
 
-    private imgContainerClientService: ImageContainerClientService,
+    private imgBlobClientService: ImageBlobClientService,
+
+    private configService: ConfigService,
 
     private marketService: MarketService,
   ) {}
@@ -49,7 +52,7 @@ export class ItemService {
    * @param item
    * @param userId
    */
-  async createItem(item: CreateItemDto, userId: number): Promise<void> {
+  async createItem(item: CreateItemDto, images: Express.Multer.File[], userId: number): Promise<void> {
     const owner: User = await this.userService.getUserById(userId);
 
     const category: ItemCategory =
@@ -61,6 +64,10 @@ export class ItemService {
     const location: PickUpPoint =
       await this.marketService.getOneDeliveryLocation(item.locationId);
 
+    // upload images to azure blob storage
+    const uploadedImages = await this.uploadItemImage(images);
+
+    // create item entity
     const itemCreate: Item = this.itemRepository.create({
       owner,
       category,
@@ -72,11 +79,11 @@ export class ItemService {
       location,
     });
 
-    item.img.forEach(({ image, thumbnail }) => {
+    uploadedImages.forEach(({ image, thumbnail }) => {
       itemCreate.img.add(
         this.em.create(ItemImage, {
           image,
-          thumbnail,
+          thumbnail
         }),
       );
     });
@@ -246,68 +253,61 @@ export class ItemService {
 
   async uploadItemImage(
     files: Array<Express.Multer.File>,
-  ): Promise<{ image: Image; thumbnail: Image }[]> {
-    const uploadTasks: Promise<{ image: Image; thumbnail: Image }>[] =
-      files.map(async (file) => {
-        const imgblockBlobClient: BlockBlobClient =
-          this.imgContainerClientService.getBlockBlobClient(file.originalname);
+  ): Promise<{ image: AzureStorageBlob; thumbnail: AzureStorageBlob }[]> {
+    console.log('files ', files);
 
-        const thumbnailBlockBlobClient: BlockBlobClient =
-          this.imgContainerClientService.getBlockBlobClient(
-            '/' + file.originalname + 'wx400',
-          );
-        try {
-          // resize image to thumbnail
-          const thumbnail: Buffer = await resizeImageFromBuffer(
-            file.buffer,
-            THUMBNAIL_RESIZE_HEIGHT,
-          );
+    const uploadTasks: Promise<{
+      image: AzureStorageBlob;
+      thumbnail: AzureStorageBlob;
+    }>[] = files.map(async (file: Express.Multer.File) => {
+      const upload = await this.imgBlobClientService.uploadImage(file, [
+        {
+          height: THUMBNAIL_RESIZE_HEIGHT,
+        },
+      ]);
 
-          // upload image to azure blob storage
-          const [imgUpload, thumbnailUpload] = await Promise.all([
-            imgblockBlobClient.uploadData(file.buffer, {
-              blobHTTPHeaders: {
-                blobContentType: file.mimetype,
-              },
-            }),
-            thumbnailBlockBlobClient.uploadData(thumbnail, {
-              blobHTTPHeaders: {
-                blobContentType: file.mimetype,
-              },
-            }),
-          ]);
+      if (!upload) {
+        return null;
+      }
 
-          // create image entities to store in database
-          return {
-            image: this.em.create(Image, {
-              imgPath: imgUpload._response.request.url,
-            }),
-            thumbnail: this.em.create(Image, {
-              imgPath: thumbnailUpload._response.request.url,
-            }),
-          };
-        } catch (error) {
-          console.log(error);
-          return;
-        }
+      // create image entities to store in database
+      const image: AzureStorageBlob = this.em.create(AzureStorageBlob, {
+        blobName: upload.imageUpload.blobName,
       });
 
+      const thumbnail: AzureStorageBlob = upload.thumbnailUploads.map(
+        (thumbnailUpload) =>
+          this.em.create(AzureStorageBlob, {
+            blobName: thumbnailUpload.blobName,
+          }),
+      )[0];
+
+      return {
+        image,
+        thumbnail,
+      };
+    });
+
     // Retrieve successfully uploaded images
-    const imageUrls: { image: Image; thumbnail: Image }[] = (
-      await Promise.all(uploadTasks)
-    ).filter((imageUrl) => imageUrl);
+    const successUploads: {
+      image: AzureStorageBlob;
+      thumbnail: AzureStorageBlob;
+    }[] = (await Promise.all(uploadTasks)).filter((blob) => blob);
 
     // Persist image entities to database
-    const imagesToPersist: Image[] = [];
+    const imagesToPersist: AzureStorageBlob[] = successUploads.reduce(
+      (acc: AzureStorageBlob[], cur) => [...acc, cur.image, cur.thumbnail],
+      [],
+    );
 
-    for (const imageUrl of imageUrls) {
-      imagesToPersist.push(imageUrl.image);
-      imagesToPersist.push(imageUrl.thumbnail);
-    }
+    // for (const upload of successUploads) {
+    //   imagesToPersist.push(upload.image);
+    //   imagesToPersist.push(upload.thumbnails[0]);
+    // }
 
     this.em.persistAndFlush(imagesToPersist);
 
-    return imageUrls;
+    return successUploads;
   }
 
   async toggleUserFavoriteItem(itemId: number, userId: number): Promise<Item> {

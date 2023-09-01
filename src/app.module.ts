@@ -7,7 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import Configuration from './configs/app.config';
 import { ItemModule } from './modules/item/item.module';
 import { UserModule } from './modules/user/user.module';
-import { AzureBlobStorageClientModule } from './modules/azure-blob-storage/blob-storage.module';
+import { AzureBlobStorageModule } from './modules/azure-blob-storage/azure.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { MarketModule } from './modules/market/market.module';
 import { GoogleOauth2Module } from './modules/google-oauth2/oauth2.module';

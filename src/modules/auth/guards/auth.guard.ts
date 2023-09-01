@@ -14,6 +14,7 @@ import { CustomUnauthorizedException } from 'src/common/exceptions/custom.except
 import { JWTTokensUtility } from 'src/modules/auth/utils/jwt-token.util';
 import { WsException } from '@nestjs/websockets';
 import { ITokenPayload } from '../auth.interface';
+import { Request } from 'express';
 
 // https://docs.nestjs.com/security/authentication#implementing-the-authentication-guard
 @Injectable()
@@ -58,8 +59,7 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {
-    const header = request.headers as Headers & { authorization?: string };
-    const [type, token] = header.authorization?.split(' ') ?? [];
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
 }

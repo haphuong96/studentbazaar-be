@@ -1,4 +1,4 @@
-import { Image } from 'src/modules/img/image.entity';
+import { AzureStorageBlob } from 'src/modules/azure-blob-storage/blob.entity';
 import { Transform } from 'class-transformer';
 import { ItemStatus } from '../entities/item.entity';
 
@@ -9,8 +9,8 @@ export class CreateItemDto {
   conditionId?: number;
   price?: number;
   img: {
-    image: Image;
-    thumbnail: Image;
+    imageId: number;
+    thumbnailId: number;
   }[];
   locationId: number;
   status: ItemStatus;

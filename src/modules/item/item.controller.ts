@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ITokenPayload, RequestWithUser } from '../auth/auth.interface';
-import { Image } from '../img/image.entity';
+import { AzureStorageBlob } from '../azure-blob-storage/blob.entity';
 import { CreateItemDto, SearchItemDto, UpdateItemDto } from './dto/item.dto';
 import { Item } from './entities/item.entity';
 import { ItemService } from './item.service';
@@ -23,13 +23,15 @@ export class ItemController {
   constructor(private itemService: ItemService) {}
 
   @Post()
+  @UseInterceptors(FilesInterceptor('images'))
   async postItem(
     @Req() request: Request,
     @Body() createItemDto: CreateItemDto,
+    @UploadedFiles() images: Array<Express.Multer.File>,
   ): Promise<void> {
     const user: ITokenPayload = request['user'];
 
-    return await this.itemService.createItem(createItemDto, user.sub);
+    return await this.itemService.createItem(createItemDto, images, user.sub);
   }
 
   @Get()
@@ -84,8 +86,8 @@ export class ItemController {
     @UploadedFiles() files: Array<Express.Multer.File>,
   ): Promise<
     {
-      image: Image;
-      thumbnail: Image;
+      image: AzureStorageBlob;
+      thumbnail: AzureStorageBlob;
     }[]
   > {
     return await this.itemService.uploadItemImage(files);

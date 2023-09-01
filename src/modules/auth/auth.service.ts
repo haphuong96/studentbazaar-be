@@ -198,7 +198,7 @@ export class AuthService {
     if (auth) {
       await this.emailService.sendMail({
         subject: 'Verify your email',
-        to: emailAddress,
+        to: 'tnguyen09@qub.ac.uk',
         from: process.env.EMAIL,
         html: this.emailTemplate.getAccountVerificationEmailTemplate(
           auth.token,
@@ -237,7 +237,8 @@ export class AuthService {
       type: AuthenticationType.EMAIL_VERIFICATION,
     });
 
-    if (!auth) {
+    // if token not found or token expired
+    if (!auth || auth.expiredAt < new Date()) {
       throw new CustomForbiddenException(
         ErrorMessage.INVALID_TOKEN,
         ErrorCode.FORBIDDEN_INVALID_EMAIL_TOKEN,
