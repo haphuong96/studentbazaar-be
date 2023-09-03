@@ -1,5 +1,5 @@
 export const azureURLGenerator = (resource: {
-  storageAccountName?: string;
+  storageAccountName: string;
   containerName?: string;
   blobName?: string;
 }) => {

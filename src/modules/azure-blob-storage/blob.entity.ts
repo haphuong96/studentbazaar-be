@@ -7,7 +7,7 @@ import {
   Enum,
 } from '@mikro-orm/core';
 import { ConfigService } from '@nestjs/config';
-import { azureURLGenerator } from 'src/utils/azure.util';
+import { azureURLGenerator } from '../../utils/azure.util';
 
 @Entity()
 export class AzureStorageBlob {

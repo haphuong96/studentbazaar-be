@@ -146,6 +146,7 @@ export class ChatService {
       },
       {
         populate: ['participants', 'lastMessage'],
+        orderBy: { id: 'DESC' },
       },
     );
 

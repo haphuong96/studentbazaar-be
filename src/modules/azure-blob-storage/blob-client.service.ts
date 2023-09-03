@@ -7,7 +7,6 @@ import {
   BlockBlobClient,
   ContainerClient,
 } from '@azure/storage-blob';
-import { THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
 import { resizeImageFromBuffer } from 'src/utils/img-resize.util';
 import { FileUploadResponse } from './azure.interface';
 
@@ -56,10 +55,8 @@ export class ImageBlobClientService {
       return null;
     }
 
-     console.log('thumbnails ', thumbnails); 
     const thumbnailUploads: FileUploadResponse[] = await Promise.all(
       thumbnails.map(async (thumbnail) => {
-        console.log('thumbnail ', thumbnail);
         const thumbnailBuffer: Buffer = await resizeImageFromBuffer(
           file.buffer,
           thumbnail.height || thumbnail.width,

@@ -272,42 +272,39 @@ export class AuthService {
     const decodedPayload: ITokenPayload =
       await this.jwtTokensUtility.verifyRefreshToken(refreshToken);
 
-    if (!decodedPayload) {
-      throw new CustomUnauthorizedException(
-        ErrorMessage.UNAUTHORIZED,
-        ErrorCode.UNAUTHORIZED_REFRESH_TOKEN,
-      );
-    }
+    if (decodedPayload) {
+      // Check if refresh token exists in db
+      const refreshTokenFound: RefreshToken =
+        await this.refreshTokenRepository.findOne({
+          user: this.em.getReference(User, decodedPayload.sub),
+        });
 
-    // Check if refresh token is the current refresh token of user
-    // Find refresh token by user/client
-    const user: RefreshToken = await this.refreshTokenRepository.findOne({
-      user: this.em.getReference(User, decodedPayload.sub),
-    });
-
-    if (user) {
-      const isRefreshTokenMatched = await bcrypt.compare(
-        refreshToken,
-        user.refreshToken,
-      );
-
-      if (isRefreshTokenMatched) {
-        // Refresh token authenticated successfully. Create new access token and refresh token
-        const accessToken: string = await this.jwtTokensUtility.signAccessToken(
-          decodedPayload,
+      // Check if refresh token is the current refresh token of user
+      if (refreshTokenFound) {
+        const isRefreshTokenMatched : boolean = await bcrypt.compare(
+          refreshToken,
+          refreshTokenFound.refreshToken,
         );
-        const refreshToken: string =
-          await this.jwtTokensUtility.signRefreshToken(decodedPayload);
 
-        // update new refresh token(hashed) for user
-        user.refreshToken = await bcrypt.hash(refreshToken, SALT_ROUNDS);
+        if (isRefreshTokenMatched) {
+          // Refresh token authenticated successfully. Create new access token and refresh token
+          const accessToken: string =
+            await this.jwtTokensUtility.signAccessToken(decodedPayload);
+          const refreshToken: string =
+            await this.jwtTokensUtility.signRefreshToken(decodedPayload);
 
-        this.em.flush();
+          // update new refresh token(hashed) for user
+          refreshTokenFound.refreshToken = await bcrypt.hash(
+            refreshToken,
+            SALT_ROUNDS,
+          );
 
-        return { accessToken, refreshToken };
+          await this.em.flush();
+          return { accessToken, refreshToken };
+        }
+
+        //TODO: Revoke all refresh tokens of user, if refresh token was used twice
       }
-
-      //TODO: Revoke all refresh tokens of user, if refresh token was used twice
     }
 
     // throw error otherwise

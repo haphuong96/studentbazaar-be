@@ -8,7 +8,7 @@ import {
   ErrorMessage,
 } from 'src/common/exceptions/constants.exception';
 import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
-import { THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
+import { ITEM_THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
 import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';
 import { resizeImageFromBuffer } from 'src/utils/img-resize.util';
 import { ImageBlobClientService } from '../azure-blob-storage/blob-client.service';
@@ -262,7 +262,7 @@ export class ItemService {
     }>[] = files.map(async (file: Express.Multer.File) => {
       const upload = await this.imgBlobClientService.uploadImage(file, [
         {
-          height: THUMBNAIL_RESIZE_HEIGHT,
+          height: ITEM_THUMBNAIL_RESIZE_HEIGHT,
         },
       ]);
 
@@ -299,11 +299,6 @@ export class ItemService {
       (acc: AzureStorageBlob[], cur) => [...acc, cur.image, cur.thumbnail],
       [],
     );
-
-    // for (const upload of successUploads) {
-    //   imagesToPersist.push(upload.image);
-    //   imagesToPersist.push(upload.thumbnails[0]);
-    // }
 
     this.em.persistAndFlush(imagesToPersist);
 
@@ -343,8 +338,7 @@ export class ItemService {
       throw new BadRequestException('You cannot delete your not item');
     }
 
-    // await this.em.removeAndFlush(item);
-    await this.itemRepository.nativeDelete({ id: itemId });
+    await this.em.removeAndFlush(item);
     return true;
   }
 }
