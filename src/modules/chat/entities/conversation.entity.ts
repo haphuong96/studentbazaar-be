@@ -27,3 +27,7 @@ export class Conversation {
   @Property( { persist: false })
   isNew?: boolean;
 }
+
+export class ConversationWithLastMessage {
+  
+}

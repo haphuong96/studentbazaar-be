@@ -25,18 +25,31 @@ export class ChatService {
     private readonly userService: UserService,
   ) {}
   async saveMessage(
-    sender: User,
+    senderId: number,
     message: string,
-    conversation: Conversation,
+    receiverId?: number,
+    conversationId?: number,
   ): Promise<Message> {
+    // if no conversationId, check if conversation existed based on participants. If not, create new conversation
+    const conversation: Conversation = conversationId
+      ? await this.getConversationById(conversationId, senderId)
+      : (await this.getOneToOneConversationByParticipants([
+          senderId,
+          receiverId,
+        ])) ||
+        (await this.createNewConversation([
+          senderId,
+          receiverId,
+        ]));
+    
+    const sender : User = await this.userService.getUserById(senderId);
+        
     const newMessage: Message = this.em.create(Message, {
       messageType: MessageType.MESSAGE,
-      sender: sender.id,
+      sender: sender,
       message,
-      conversation: conversation.id,
+      conversation: conversation,
     });
-
-    console.log('newMessage ', newMessage);
 
     await this.em.persistAndFlush(newMessage);
 
@@ -232,7 +245,7 @@ export class ChatService {
     wrap(conversation).assign({
       isNew: (await conversation.messages.loadCount()) ? false : true,
     });
-    
+
     return conversation;
   }
 

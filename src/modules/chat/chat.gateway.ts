@@ -14,12 +14,10 @@ import { ChatService } from './chat.service';
 // import { WsJwtAuthGuard } from '../auth/guards/ws-auth.guard';
 // import { ITokenPayload } from '../auth/auth.interface';
 import { InboxPayload } from './chat.interface';
-// import { ErrorCode } from 'src/common/exceptions/constants.exception';
 import { User } from '../user/entities/user.entity';
-import { Conversation } from './entities/conversation.entity';
 import { UserService } from '../user/user.service';
 import { UseRequestContext, MikroORM } from '@mikro-orm/core';
-// import { WsExceptionsFilter } from 'src/common/exceptions/filter.exception';
+import { ITokenPayload } from '../auth/auth.interface';
 
 @Injectable()
 @WebSocketGateway({ cors: { origin: 'http://localhost:5173' } })
@@ -38,34 +36,15 @@ export class ChatGateway implements OnGatewayConnection {
    * @param socket
    * @param args
    */
-  // @UseGuards(WsJwtAuthGuard)
-  // @UseFilters(new WsExceptionFilter())
   @UseRequestContext()
   async handleConnection(socket: Socket, ...args: any[]) {
     console.log('client connected', socket.id);
 
-    const user: User = await this.chatService.retrieveUserFromSocket(socket);
+    const user: ITokenPayload = socket['user'];
 
-    if (user) {
-      socket['user'] = { ...user };
+    // join user to "user" room
+    socket.join(user.sub.toString());
 
-      // join user to "user" room
-      socket.join(user.id.toString());
-
-      /** --------------Socket experiment*/
-      // on connect, send all (online) users to client
-      // const users = [];
-      // for (let [id, socket] of this.server.of('/').sockets) {
-      //   users.push({
-      //     userID: id,
-      //     username: socket['user'].username,
-      //   });
-      // }
-
-      // this.server.emit('users', users);
-    } else {
-      socket.disconnect();
-    }
   }
 
   @SubscribeMessage('message')
@@ -76,36 +55,22 @@ export class ChatGateway implements OnGatewayConnection {
   ): Promise<void> {
     //   WsResponse<void>
     // If authenticated, send message to all clients & store messages
-    const user: User = socket['user'];
+    const user: ITokenPayload = socket['user'];
 
     // check conversation and save msg
-    // if no conversationId, check if conversation existed based on participants. If not, create new conversation
-    const conversation: Conversation = data.conversationId
-      ? await this.chatService.getConversationById(data.conversationId, user.id)
-      : (await this.chatService.getOneToOneConversationByParticipants([
-          user.id,
-          data.receiverId,
-        ])) ||
-        (await this.chatService.createNewConversation([
-          user.id,
-          data.receiverId,
-        ]));
-
     const message = await this.chatService.saveMessage(
-      user,
+      user.sub,
       data.message,
-      conversation,
+      data.receiverId,
+      data.conversationId,
     );
 
     // list of receivers "room"
-    const receivers: string[] = conversation.participants
+    const receivers: string[] = message.conversation.participants
       .getItems()
       .map((participant: User) => participant.id.toString());
-    
-    // send message to all receivers and sender
-    this.server.to(user.id.toString()).to(receivers).emit(
-      'message',
-      message,
-    );
+
+    // send message to all message receivers including sender
+    this.server.to(user.sub.toString()).to(receivers).emit('message', message);
   }
 }
