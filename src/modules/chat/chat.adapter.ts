@@ -28,11 +28,10 @@ export class AuthenticatedWsIoAdapter extends IoAdapter {
         );
         if (user) {
           socket['user'] = user;
-          next();
+          return next();
         }
-      } else {
-        next(new WsException(ErrorCode.UNAUTHORIZED));
       }
+      next(new Error(ErrorCode.UNAUTHORIZED));
     });
     return server;
   }
@@ -48,24 +47,4 @@ export class AuthenticatedWsIoAdapter extends IoAdapter {
     }
   }
 
-  //   createIOServer(port: number, options?: ServerOptions) {
-  //     options.allowRequest = async (req, allowFunction) => {
-  //       const token = req;
-  //       if (token === '12345678') {
-  //         allowFunction(null, true);
-  //       } else {
-  //         allowFunction('Authentication error', false);
-  //       }
-  //     };
-
-  //     const server = super.createIOServer(port, options);
-  //     server.use((socket, next) => {
-  //       const token = socket.handshake.query.token;
-  //       if (token === '12345678') {
-  //         return next();
-  //       }
-  //       return next(new Error('Authentication error'));
-  //     });
-  //     return server;
-  //   }
 }

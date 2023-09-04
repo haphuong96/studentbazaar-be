@@ -88,29 +88,6 @@ export class ChatService {
     return conversation;
   }
 
-  async retrieveUserFromSocket(socket: Socket): Promise<User> {
-    const bearerToken: string = socket.handshake.auth.token
-      ? socket.handshake.auth.token
-      : socket.handshake.headers.authorization;
-    if (bearerToken) {
-      const [type, token] = bearerToken.split(' ') ?? [];
-
-      console.log('token', token);
-
-      const user: ITokenPayload = await this.jwtService.verifyAccessToken(
-        token,
-      );
-      console.log('user ', user);
-      if (user) {
-        // return user;
-        return await this.userService.getUserById(user.sub);
-      }
-    }
-
-    socket.emit('exception', ErrorCode.UNAUTHORIZED);
-    // throw new WsException('Unauthorized');
-  }
-
   /**
    * Get conversation by participants. Only supports 1-1 conversation
    */
