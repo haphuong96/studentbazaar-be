@@ -4,7 +4,7 @@ import {
   Query,
   Redirect,
 } from '@nestjs/common';
-import { Public } from 'src/common/auth.constants';
+import { Public } from '../../common/auth.constants';
 import { GoogleOauth2Service } from './oauth2.service';
 
 @Controller('google')

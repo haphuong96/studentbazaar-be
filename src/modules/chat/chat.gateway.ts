@@ -13,11 +13,13 @@ import { Socket, Server } from 'socket.io';
 import { ChatService } from './chat.service';
 // import { WsJwtAuthGuard } from '../auth/guards/ws-auth.guard';
 // import { ITokenPayload } from '../auth/auth.interface';
-import { InboxPayload } from './chat.interface';
+import { InboxPayload, ReadMessagePayload } from './chat.interface';
 import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { UseRequestContext, MikroORM } from '@mikro-orm/core';
 import { ITokenPayload } from '../auth/auth.interface';
+import { ConversationParticipant } from './entities/participant.entity';
+import { Conversation } from './entities/conversation.entity';
 
 @Injectable()
 @WebSocketGateway({ cors: { origin: 'http://localhost:5173' } })
@@ -64,6 +66,9 @@ export class ChatGateway implements OnGatewayConnection {
       data.receiverId,
       data.conversationId,
     );
+    
+    // mark message as read for sender (sender automatically read the message when sending)
+    const messageNotification : Conversation = await this.chatService.markMessageAsRead(message.sender.id, message.id);
 
     // list of receivers "room"
     const receivers: string[] = message.conversation.participants
@@ -72,5 +77,23 @@ export class ChatGateway implements OnGatewayConnection {
 
     // send message to all message receivers including sender
     this.server.to(user.sub.toString()).to(receivers).emit('message', message);
+    
+    console.log('message notification ', messageNotification)
+    // send notification to all message receivers except sender
+    this.server.to(receivers).emit('message_notification', messageNotification)
+  }
+
+  @SubscribeMessage('read_message')
+  @UseRequestContext()
+  async onReadMessage(
+    @MessageBody() data: ReadMessagePayload,
+    @ConnectedSocket() socket: Socket,
+  ) : Promise<void> {
+    const user: ITokenPayload = socket['user'];
+
+    // mark conversation as read
+    const conversationRead : Conversation = await this.chatService.markMessageAsRead(user.sub, data.messageId);
+    
+    this.server.to(user.sub.toString()).emit('read_message', conversationRead);
   }
 }

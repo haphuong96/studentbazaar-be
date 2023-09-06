@@ -4,7 +4,8 @@ import {
   ManyToMany,
   OneToMany,
   Collection,
-  Property
+  Property,
+  types,
 } from '@mikro-orm/core';
 import { ConversationParticipant } from './participant.entity';
 import { User } from '../../user/entities/user.entity';
@@ -15,19 +16,23 @@ export class Conversation {
   @PrimaryKey()
   id!: number;
 
-  @ManyToMany({ entity: () => User, pivotEntity: () => ConversationParticipant })
+  @ManyToMany({
+    entity: () => User,
+    pivotEntity: () => ConversationParticipant,
+  })
   participants = new Collection<User>(this);
 
   @OneToMany({ mappedBy: 'conversation' })
   messages = new Collection<Message>(this);
 
-  @OneToMany( { mappedBy: 'conversation', persist: false })
+  @OneToMany({ mappedBy: 'conversation', persist: false })
   lastMessage = new Collection<Message>(this);
 
-  @Property( { persist: false })
+  @Property({ persist: false })
   isNew?: boolean;
+
+  @Property({ persist: false })
+  isRead?: boolean;
 }
 
-export class ConversationWithLastMessage {
-  
-}
+export class ConversationWithLastMessage {}

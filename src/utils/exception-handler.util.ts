@@ -1,6 +1,6 @@
-import { CustomBadRequestException, CustomNotFoundException } from 'src/common/exceptions/custom.exception';
+import { CustomBadRequestException, CustomNotFoundException } from '../common/exceptions/custom.exception';
 import { IPrimaryKey } from '@mikro-orm/core';
-import { ErrorCode } from 'src/common/exceptions/constants.exception';
+import { ErrorCode } from '../common/exceptions/constants.exception';
 
 export const findOneOrFailBadRequestExceptionHandler = (
   entityName: string,

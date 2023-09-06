@@ -6,7 +6,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import {
   ErrorCode,
   ErrorMessage,
-} from 'src/common/exceptions/constants.exception';
+} from '../../common/exceptions/constants.exception';
 import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
 import { ITEM_THUMBNAIL_RESIZE_HEIGHT } from 'src/common/img.constants';
 import { findOneOrFailBadRequestExceptionHandler } from 'src/utils/exception-handler.util';

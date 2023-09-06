@@ -4,6 +4,7 @@ import { ITokenPayload, RequestWithUser } from '../auth/auth.interface';
 import { ChatService } from './chat.service';
 import { Conversation } from './entities/conversation.entity';
 import { Message } from './entities/message.entity';
+import { ConversationParticipant } from './entities/participant.entity';
 @Controller()
 export class ChatController {
   constructor(private chatService: ChatService) {}
@@ -51,4 +52,12 @@ export class ChatController {
       user.sub,
     );
   }
+
+  @Get('conversations/me/unread')
+  async getUnreadConversations(
+    @Req() request: RequestWithUser
+  ) : Promise<Conversation[]> {
+    const user: ITokenPayload = request.user;
+    return await this.chatService.getUnreadConversations(user.sub);
+  } 
 }

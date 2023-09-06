@@ -19,4 +19,9 @@ export class CampusLocation {
 
   @ManyToMany({ mappedBy: 'campuses' })
   universities = new Collection<University>(this);
+
+  constructor(id: number, campusName: string) {
+    this.id = id;
+    this.campusName = campusName;
+  }
 }

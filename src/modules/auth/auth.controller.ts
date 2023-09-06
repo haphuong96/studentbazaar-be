@@ -11,7 +11,7 @@ import {
 import { University } from '../market/entities/university.entity';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterUserDto } from './dto/signup.dto';
-import { Public } from 'src/common/auth.constants';
+import { Public } from '../../common/auth.constants';
 import { User } from '../user/entities/user.entity';
 import { ITokenPayload, RequestWithUser } from './auth.interface';
 

@@ -4,7 +4,7 @@ import { EntityManager, EntityRepository } from '@mikro-orm/mysql';
 import {
   findOneOrFailBadRequestExceptionHandler,
   findOneOrFailNotFoundExceptionHandler,
-} from 'src/utils/exception-handler.util';
+} from '../../utils/exception-handler.util';
 import { CampusLocation } from './entities/campus.entity';
 import { PickUpPoint } from './entities/pickup-point.entity';
 import { SearchDeliveryLocationsQuery } from './dto/market.dto';

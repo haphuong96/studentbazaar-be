@@ -92,13 +92,13 @@ export class ImageBlobClientService {
 
   getBlobName(imgName: string, resizeHeight?: number, resizeWidth?: number) {
     return (
-      imgName +
+      randomUUID() +
       '/' +
       `${resizeWidth ? resizeWidth : 'f'}x${
         resizeHeight ? resizeHeight : 'f'
       }` +
       '/' +
-      randomUUID()
+      imgName
     );
   }
 }

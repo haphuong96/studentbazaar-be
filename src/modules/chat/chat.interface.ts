@@ -5,3 +5,7 @@ export interface InboxPayload {
     conversationId?: number,
     message: string
 }
+
+export interface ReadMessagePayload {
+    messageId: number,
+}

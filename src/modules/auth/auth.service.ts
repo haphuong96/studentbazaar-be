@@ -9,10 +9,10 @@ import {
 } from '../../common/exceptions/constants.exception';
 import { LoginDto, RegisterUserDto } from './dto/signup.dto';
 import * as bcrypt from 'bcrypt';
-import { JWTTokensUtility } from 'src/modules/auth/utils/jwt-token.util';
+import { JWTTokensUtility } from '../auth/utils/jwt-token.util';
 import { ILogin, ITokenPayload } from './auth.interface';
 import { google } from 'googleapis';
-import { SALT_ROUNDS } from 'src/common/auth.constants';
+import { SALT_ROUNDS } from '../../common/auth.constants';
 import {
   EmailVerification,
   AuthenticationType,
@@ -21,7 +21,7 @@ import crypto from 'crypto';
 import {
   CustomForbiddenException,
   CustomUnauthorizedException,
-} from 'src/common/exceptions/custom.exception';
+} from '../../common/exceptions/custom.exception';
 import { EmailService } from '../email/email.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { EmailTemplate } from '../email/email-template.util';
@@ -33,9 +33,6 @@ import { MarketService } from '../market/market.service';
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(University)
-    private readonly universityRepository: EntityRepository<University>,
-
     @InjectRepository(EmailVerification)
     private readonly emailVerifyRepository: EntityRepository<EmailVerification>,
 

@@ -1,4 +1,4 @@
-import { EntityRepository, SqlEntityRepository } from '@mikro-orm/mysql';
+import { EntityManager, EntityRepository, SqlEntityRepository } from '@mikro-orm/mysql';
 import { AuthService } from './auth.service';
 import { User } from '../user/entities/user.entity';
 import { University } from '../market/entities/university.entity';
@@ -9,6 +9,16 @@ import { DeepMocked, createMock } from '@golevelup/ts-jest';
 import { Loaded } from '@mikro-orm/core';
 import { MockType } from '../../utils/test.util';
 import { ErrorMessage } from '../../common/exceptions/constants.exception';
+import { CampusLocation } from '../market/entities/campus.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
+import { JWTTokensUtility } from './utils/jwt-token.util';
+import { UserService } from '../user/user.service';
+import { EmailService } from '../email/email.service';
+import { EmailTemplate } from '../email/email-template.util';
+import { MarketService } from '../market/market.service';
+import { EmailVerification } from './entities/email-verification.entity';
+
+const emailVerificationUrl = 'http://localhost:5173/signup/email/verify'
 
 const validEmail = 'pnguyen09@qub.ac.uk';
 const invalidUniEmail = 'pnguyen09@gmail.com';
@@ -19,8 +29,19 @@ const uniArray: University[] = [
   new University(2, 'Ulster University', 'ulster.ac.uk'),
 ];
 
+const campusArray: CampusLocation[] = [new CampusLocation(1, 'Belfast')];
+
 const userArray: User[] = [
-  new User({id: 1, username: 'GreenBubbleTea', emailAddress: 'phuong96@qub.ac.uk', university: uniArray[1]}),
+  new User({
+    id: 1,
+    username: 'GreenBubbleTea',
+    emailAddress: 'phuong96@qub.ac.uk',
+    universityCampus: {
+      id: 1,
+      university: uniArray[0],
+      campusLocation: campusArray[0],
+    },
+  }),
 ];
 
 const retrieveEmailDomain = (emailAddress: string) =>
@@ -31,8 +52,11 @@ const retrieveEmailDomain = (emailAddress: string) =>
  */
 describe('AuthService', () => {
   let authService: AuthService;
-  let userRepoMock: MockType<EntityRepository<User>>; // DeepMocked<EntityRepository<User>>;
-  let uniRepoMock: MockType<EntityRepository<University>>; //DeepMocked<EntityRepository<University>>;
+  // let userRepoMock: MockType<EntityRepository<User>>; // DeepMocked<EntityRepository<User>>;
+  // let uniRepoMock: MockType<EntityRepository<University>>; //DeepMocked<EntityRepository<University>>;
+  let refreshTokenRepoMock: MockType<EntityRepository<RefreshToken>>; //DeepMocked<EntityRepository<RefreshToken>>;
+  let marketServiceMock: MarketService
+  let userServiceMock: UserService;
 
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
@@ -40,41 +64,78 @@ describe('AuthService', () => {
         AuthService,
         // https://mikro-orm.io/docs/usage-with-nestjs#testing
         {
-          provide: getRepositoryToken(User),
-          useValue: createMock<EntityRepository<User>>(),
+          provide: getRepositoryToken(EmailVerification),
+          useValue: createMock<EntityRepository<EmailVerification>>(),
         },
         {
-          provide: getRepositoryToken(University),
-          useValue: createMock<EntityRepository<University>>(),
+          provide: getRepositoryToken(RefreshToken),
+          useValue: createMock<EntityRepository<RefreshToken>>(),
         },
+        {
+          provide: EntityManager,
+          useValue: createMock<EntityManager>(),
+        },
+        {
+          provide: JWTTokensUtility,
+          useValue: createMock<JWTTokensUtility>(),
+        },
+        {
+          provide: UserService,
+          useValue: createMock<UserService>(),
+        },
+        {
+          provide: EmailService,
+          useValue: createMock<EmailService>(),
+        },
+        {
+          provide: EmailTemplate,
+          useValue: {
+            getAccountVerificationEmailTemplate: jest.fn().mockImplementation((token: string, username?: string) => {
+              return `<br/><b>Hi${' '+ username}</b>, <br/><br/> Please verify your email by clicking the link below. The link expires in 1 hour and can only be used once.<br/><br/> 
+              <a href="${emailVerificationUrl}?token=${token}">Verify Email</a><br/><br/>
+              If you didn’t request this verification and don’t have a Student Bazaar account then please ignore this email.<br/><br/>
+              Team Student Bazaar`;
+            })
+          }
+        },
+        {
+          provide: MarketService,
+          useValue: createMock<MarketService>(),
+        }
       ],
     }).compile();
 
     authService = moduleRef.get<AuthService>(AuthService);
-    userRepoMock = moduleRef.get(getRepositoryToken(User));
-    uniRepoMock = moduleRef.get(getRepositoryToken(University));
-
+    marketServiceMock = moduleRef.get<MarketService>(MarketService);
+    userServiceMock = moduleRef.get<UserService>(UserService);
+    // userRepoMock = moduleRef.get(getRepositoryToken(User));
+    // uniRepoMock = moduleRef.get(getRepositoryToken(University));
   });
 
   describe('checkEmailAddress', () => {
     describe('valid', () => {
       it('should return a university based on email domain', async () => {
         // Arrange
-        const validEmailDomain = retrieveEmailDomain(validEmail);
-
         // should return a valid university and no existing user email
-        const uniRepoResult: University = uniArray[0];
-        const userRepoResult: User = undefined;
+        const result: University = uniArray[0];
+        const userFoundByEmail: User = undefined;
 
-        const uniRepoSpy = jest.spyOn(uniRepoMock, 'findOne').mockResolvedValue(uniRepoResult);
-        const userRepoSpy = jest.spyOn(userRepoMock, 'findOne').mockResolvedValue(userRepoResult);
+        const findUniByEmailSpy = jest
+          .spyOn(marketServiceMock, 'getUniversityByEmailAddress')
+          .mockResolvedValue(result);
+        const findUserByEmailSpy = jest
+          .spyOn(userServiceMock, 'getUserByEmail')
+          .mockResolvedValue(userFoundByEmail);
 
         // Act & Assert
         expect(authService.checkEmailAddress(validEmail)).resolves.toEqual(
-          uniRepoResult,
+          result,
         );
-        expect(uniRepoSpy).toBeCalledWith({
-          emailAddressDomain: validEmailDomain,
+        expect(findUniByEmailSpy).toBeCalledWith({
+          validEmail
+        });
+        expect(findUserByEmailSpy).toBeCalledWith({
+          validEmail
         });
       });
     });
@@ -85,9 +146,11 @@ describe('AuthService', () => {
         const invalidEmailDomain = retrieveEmailDomain(invalidUniEmail);
 
         // should return null university
-        const uniRepoResult: University = undefined;
+        const result: University = undefined;
 
-        const uniRepoSpy = jest.spyOn(uniRepoMock, 'findOne').mockResolvedValue(uniRepoResult);
+        const uniRepoSpy = jest
+          .spyOn(marketServiceMock, 'getUniversityByEmailAddress')
+          .mockResolvedValue(result);
 
         // Act & Assert
         // https://jestjs.io/docs/next/tutorial-async#error-handling
@@ -97,7 +160,9 @@ describe('AuthService', () => {
         } catch (e) {
           expect(e).toBeInstanceOf(HttpException);
           expect(e.status).toBe(HttpStatus.BAD_REQUEST);
-          expect(e.response).toBe(ErrorMessage.INVALID_UNIVERSITY_EMAIL_ADDRESS_DOMAIN);
+          expect(e.response).toBe(
+            ErrorMessage.INVALID_UNIVERSITY_EMAIL_ADDRESS_DOMAIN,
+          );
         }
 
         expect(uniRepoSpy).toBeCalledWith({
@@ -110,7 +175,9 @@ describe('AuthService', () => {
         // should return a user already registered
         const userRepoResult: User = userArray[0];
 
-        const userRepoSpy = jest.spyOn(userRepoMock, 'findOne').mockResolvedValue(userRepoResult);
+        const userRepoSpy = jest
+          .spyOn(userRepoMock, 'findOne')
+          .mockResolvedValue(userRepoResult);
 
         // Act & Assert
         expect.assertions(4);
@@ -125,7 +192,7 @@ describe('AuthService', () => {
         expect(userRepoSpy).toBeCalledWith({
           emailAddress: invalidExistedEmail,
         });
-      })
+      });
     });
   });
 });

@@ -7,6 +7,7 @@ import {
 } from '@mikro-orm/core';
 import { Conversation } from './conversation.entity';
 import { User } from '../../user/entities/user.entity';
+import { Message } from './message.entity';
 
 @Entity()
 export class ConversationParticipant {
@@ -15,6 +16,9 @@ export class ConversationParticipant {
 
   @ManyToOne({name: 'user_id'})
   participant!: User;
+
+  @ManyToOne()
+  lastReadMessage?: Message;
 
   @PrimaryKey()
   id!: number;

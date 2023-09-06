@@ -24,5 +24,5 @@ export class UniversityCampus {
   campusLocation!: CampusLocation;
 
   @OneToMany( { mappedBy: 'universityCampusLocation'})
-  pickUpPoints = new Collection<PickUpPoint>(this);
+  pickUpPoints? = new Collection<PickUpPoint>(this);
 }

@@ -5,13 +5,13 @@ import {
   Inject,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from 'src/common/auth.constants';
+import { IS_PUBLIC_KEY } from '../../../common/auth.constants';
 import {
   ErrorCode,
   ErrorMessage,
-} from 'src/common/exceptions/constants.exception';
-import { CustomUnauthorizedException } from 'src/common/exceptions/custom.exception';
-import { JWTTokensUtility } from 'src/modules/auth/utils/jwt-token.util';
+} from '../../../common/exceptions/constants.exception';
+import { CustomUnauthorizedException } from '../../../common/exceptions/custom.exception';
+import { JWTTokensUtility } from '../../auth/utils/jwt-token.util';
 import { WsException } from '@nestjs/websockets';
 import { ITokenPayload } from '../auth.interface';
 import { Request } from 'express';

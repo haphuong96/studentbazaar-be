@@ -12,7 +12,7 @@ import { CustomBadRequestException } from 'src/common/exceptions/custom.exceptio
 import {
   findOneOrFailBadRequestExceptionHandler,
   findOneOrFailNotFoundExceptionHandler,
-} from 'src/utils/exception-handler.util';
+} from '../../utils/exception-handler.util';
 
 @Injectable()
 export class ItemCategoryService {

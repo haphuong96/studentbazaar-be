@@ -3,7 +3,11 @@ import { Socket } from 'socket.io';
 import { JWTTokensUtility } from '../auth/utils/jwt-token.util';
 import { ITokenPayload } from '../auth/auth.interface';
 import { WsException } from '@nestjs/websockets';
-import { EntityManager, QueryBuilder } from '@mikro-orm/mysql';
+import {
+  AbstractSqlConnection,
+  EntityManager,
+  QueryBuilder,
+} from '@mikro-orm/mysql';
 import { Conversation } from './entities/conversation.entity';
 import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
@@ -12,10 +16,10 @@ import { Message, MessageType } from './entities/message.entity';
 import {
   ErrorCode,
   ErrorMessage,
-} from 'src/common/exceptions/constants.exception';
+} from '../../common/exceptions/constants.exception';
 import { ConversationParticipant } from './entities/participant.entity';
 import { Loaded, WrappedEntity, wrap } from '@mikro-orm/core';
-import { CustomForbiddenException } from 'src/common/exceptions/custom.exception';
+import { CustomForbiddenException } from '../../common/exceptions/custom.exception';
 
 @Injectable()
 export class ChatService {
@@ -36,20 +40,26 @@ export class ChatService {
       : (await this.getOneToOneConversationByParticipants([
           senderId,
           receiverId,
-        ])) ||
-        (await this.createNewConversation([
-          senderId,
-          receiverId,
-        ]));
-    
-    const sender : User = await this.userService.getUserById(senderId);
-        
+        ])) || (await this.createNewConversation([senderId, receiverId]));
+
+    const sender: User = await this.userService.getUserById(senderId);
+
     const newMessage: Message = this.em.create(Message, {
       messageType: MessageType.MESSAGE,
       sender: sender,
       message,
       conversation: conversation,
     });
+
+    // // update last read message of sender
+    // const senderInConversation: ConversationParticipant = await this.em.findOne(
+    //   ConversationParticipant,
+    //   {
+    //     participant: sender,
+    //     conversation: conversation,
+    //   }
+    // )
+    // senderInConversation.lastReadMessage = newMessage;
 
     await this.em.persistAndFlush(newMessage);
 
@@ -140,6 +150,13 @@ export class ChatService {
       },
     );
 
+    // Get unread conversations
+    const unreadConversations: Conversation[] = await this.getUnreadConversations(userId);
+    const unreadConversationIdMap: Map<number, Conversation> = new Map(); 
+    unreadConversations.forEach((unreadConversation : Conversation) => {
+      unreadConversationIdMap.set(unreadConversation.id, unreadConversation);
+    });
+
     // Get last message of each conversation + remove current user from participants
     const conversationTransform: Promise<Loaded<Message | User, never>[]>[] =
       [];
@@ -156,6 +173,11 @@ export class ChatService {
           store: true,
         }),
       );
+
+      // check if conversation is read
+      wrap(conversation).assign({
+        isRead: unreadConversationIdMap.has(conversation.id) ? false : true,
+      })
     }
 
     await Promise.all(conversationTransform);
@@ -246,5 +268,87 @@ export class ChatService {
         populate: ['sender'],
       },
     );
+  }
+
+  /**
+   * Mark conversation as read and update last message read by user and conversation
+   * @param userId
+   * @param messageId
+   */
+  async markMessageAsRead(
+    userId: number,
+    messageId: number,
+  ): Promise<Conversation> {
+    const message: Message = await this.em.findOneOrFail(Message, messageId, {
+      populate: ['conversation'],
+      failHandler: findOneOrFailNotFoundExceptionHandler,
+    });
+
+    // check if user is in conversation
+    const userInConversation: ConversationParticipant =
+      await this.em.findOneOrFail(
+        ConversationParticipant,
+        {
+          participant: userId,
+          conversation: message.conversation,
+        },
+        {
+          populate: ['lastReadMessage'],
+          failHandler: findOneOrFailNotFoundExceptionHandler,
+        },
+      );
+
+    if (!userInConversation) {
+      throw new CustomForbiddenException(
+        ErrorMessage.ACCESS_DENIED,
+        ErrorCode.FORBIDDEN_ACCESS_DENIED,
+      );
+    }
+
+    // mark message as read
+    userInConversation.lastReadMessage = message;
+
+    await this.em.flush();
+
+    return userInConversation.conversation;
+  }
+
+  async getUnreadConversations(
+    userId: number,
+  ): Promise<Conversation[]> {
+    const connection: AbstractSqlConnection = this.em.getConnection();
+
+    const query = `
+                  SELECT 
+                      cp.*, 
+                      last_message.message_id 
+                    FROM 
+                      conversation_participant cp 
+                    JOIN (
+                      SELECT MAX(m.id) AS message_id, m.conversation_id
+                      FROM message m
+                      GROUP BY m.conversation_id
+                    ) AS last_message ON cp.conversation_id = last_message.conversation_id
+                    WHERE 
+                      cp.last_read_message_id <> last_message.message_id
+                    AND 
+                      cp.user_id = ?;
+                  `;
+
+    const res = await connection.execute(query, [userId]);
+
+    const conversations: Conversation[] = await Promise.all(
+      res.map(async (conversationParticipant) => {
+        const cpMap : ConversationParticipant = this.em.map(
+          ConversationParticipant,
+          conversationParticipant,
+        );
+
+        await this.em.populate(cpMap, ['conversation']);
+        return cpMap.conversation;
+      }),
+    );
+
+    return conversations;
   }
 }
