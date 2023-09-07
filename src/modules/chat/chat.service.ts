@@ -145,15 +145,16 @@ export class ChatService {
         },
       },
       {
-        populate: ['participants', 'lastMessage'],
+        populate: ['participants', 'lastMessage', 'lastMessage.sender'],
         orderBy: { id: 'DESC' },
       },
     );
 
     // Get unread conversations
-    const unreadConversations: Conversation[] = await this.getUnreadConversations(userId);
-    const unreadConversationIdMap: Map<number, Conversation> = new Map(); 
-    unreadConversations.forEach((unreadConversation : Conversation) => {
+    const unreadConversations: Conversation[] =
+      await this.getUnreadConversations(userId);
+    const unreadConversationIdMap: Map<number, Conversation> = new Map();
+    unreadConversations.forEach((unreadConversation: Conversation) => {
       unreadConversationIdMap.set(unreadConversation.id, unreadConversation);
     });
 
@@ -177,7 +178,7 @@ export class ChatService {
       // check if conversation is read
       wrap(conversation).assign({
         isRead: unreadConversationIdMap.has(conversation.id) ? false : true,
-      })
+      });
     }
 
     await Promise.all(conversationTransform);
@@ -313,9 +314,7 @@ export class ChatService {
     return userInConversation.conversation;
   }
 
-  async getUnreadConversations(
-    userId: number,
-  ): Promise<Conversation[]> {
+  async getUnreadConversations(userId: number): Promise<Conversation[]> {
     const connection: AbstractSqlConnection = this.em.getConnection();
 
     const query = `
@@ -339,7 +338,7 @@ export class ChatService {
 
     const conversations: Conversation[] = await Promise.all(
       res.map(async (conversationParticipant) => {
-        const cpMap : ConversationParticipant = this.em.map(
+        const cpMap: ConversationParticipant = this.em.map(
           ConversationParticipant,
           conversationParticipant,
         );
