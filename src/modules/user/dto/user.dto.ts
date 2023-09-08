@@ -9,4 +9,5 @@ export class UpdateUserDto {
   aboutMe?: string;
   campusId?: number;
   fullname?: string;
+  defaultPickUpPointId?: number;
 }

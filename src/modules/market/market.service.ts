@@ -87,6 +87,10 @@ export class MarketService {
   async getOneDeliveryLocation(id: number): Promise<PickUpPoint> {
     return await this.deliveryLocationRepository.findOneOrFail(id, {
       failHandler: findOneOrFailNotFoundExceptionHandler,
+      populate: [
+        'universityCampusLocation.campusLocation',
+        'universityCampusLocation.university',
+      ],
     });
   }
 

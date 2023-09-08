@@ -52,7 +52,11 @@ export class ItemService {
    * @param item
    * @param userId
    */
-  async createItem(item: CreateItemDto, images: Express.Multer.File[], userId: number): Promise<void> {
+  async createItem(
+    item: CreateItemDto,
+    images: Express.Multer.File[],
+    userId: number,
+  ): Promise<void> {
     const owner: User = await this.userService.getUserById(userId);
 
     const category: ItemCategory =
@@ -83,7 +87,7 @@ export class ItemService {
       itemCreate.img.add(
         this.em.create(ItemImage, {
           image,
-          thumbnail
+          thumbnail,
         }),
       );
     });
@@ -132,7 +136,14 @@ export class ItemService {
 
     if (query.q) {
       whereConditions.$and.push({
-        itemName: { $like: `%${query.q}%` },
+        $or: [
+          {
+            itemName: { $like: `%${query.q}%` },
+          },
+          {
+            itemDescription: { $like: `%${query.q}%` },
+          }
+        ],
       });
     }
 

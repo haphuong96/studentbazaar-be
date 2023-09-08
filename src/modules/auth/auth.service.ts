@@ -28,8 +28,7 @@ import { EmailTemplate } from '../email/email-template.util';
 import { UserService } from '../user/user.service';
 import { MarketService } from '../market/market.service';
 
-// TODO:
-// - [ ] unit test, .env file...
+
 @Injectable()
 export class AuthService {
   constructor(

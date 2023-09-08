@@ -12,6 +12,7 @@ import { ErrorCode } from '../../common/exceptions/constants.exception';
 import { UniversityCampus } from '../market/entities/university-campus.entity';
 import { Item } from '../item/entities/item.entity';
 import { wrap } from '@mikro-orm/core';
+import { PickUpPoint } from '../market/entities/pickup-point.entity';
 
 @Injectable()
 export class UserService {
@@ -95,6 +96,16 @@ export class UserService {
         );
 
       userUpdate.universityCampus = universityCampus;
+    }
+
+    // update default pick up point
+    if (user.defaultPickUpPointId) {
+      const pickUpPoint: PickUpPoint =
+        await this.marketService.getOneDeliveryLocation(
+          user.defaultPickUpPointId,
+        );
+
+      userUpdate.defaultPickUpPoint = pickUpPoint;
     }
 
     userUpdate.fullname = user.fullname;
