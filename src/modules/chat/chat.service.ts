@@ -329,7 +329,7 @@ export class ChatService {
                       GROUP BY m.conversation_id
                     ) AS last_message ON cp.conversation_id = last_message.conversation_id
                     WHERE 
-                      cp.last_read_message_id <> last_message.message_id
+                      (cp.last_read_message_id <> last_message.message_id OR cp.last_read_message_id IS NULL)
                     AND 
                       cp.user_id = ?;
                   `;
