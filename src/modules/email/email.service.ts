@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createTransport } from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
-import { retrieveRefreshToken } from 'src/utils/oauth2.util';
+// import { retrieveRefreshToken } from 'src/utils/oauth2.util';
 
 // https://github.com/mwanago/nestjs-typescript/blob/master/src/email/email.service.ts
 @Injectable()

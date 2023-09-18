@@ -1,5 +1,5 @@
 import { azureURLGenerator } from 'src/utils/azure.util';
-import { retrieveRefreshToken } from 'src/utils/oauth2.util';
+// import { retrieveRefreshToken } from 'src/utils/oauth2.util';
 
 export default () => ({
   jwtConstants: {
@@ -22,6 +22,6 @@ export default () => ({
     clientSecret: process.env.GOOGLE_OAUTH2_CLIENT_SECRET,
     redirectUri: process.env.GOOGLE_OAUTH2_REDIRECT_URI,
     emailScope: 'https://mail.google.com',
-    refreshToken: retrieveRefreshToken() || '',
+    refreshToken: process.env.GOOGLE_OAUTH2_REFRESH_TOKEN || '',
   },
 });
