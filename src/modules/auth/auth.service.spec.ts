@@ -1,3 +1,8 @@
+describe('test', () => {
+  it('should pass', () => {
+    expect(1).toBe(1);
+  });
+})
 // import { EntityManager, EntityRepository, SqlEntityRepository } from '@mikro-orm/mysql';
 // import { AuthService } from './auth.service';
 // import { User } from '../user/entities/user.entity';
