@@ -17,7 +17,7 @@ export class CampusLocation {
   @Property({ length: 255 })
   campusName!: string;
 
-  @ManyToMany({ mappedBy: 'campuses' })
+  @ManyToMany({ entity: () => University, mappedBy: 'campuses' })
   universities = new Collection<University>(this);
 
   constructor(id: number, campusName: string) {

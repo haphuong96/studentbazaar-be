@@ -22,10 +22,10 @@ export class Conversation {
   })
   participants = new Collection<User>(this);
 
-  @OneToMany({ mappedBy: 'conversation' })
+  @OneToMany({ entity: () => Message, mappedBy: 'conversation' })
   messages = new Collection<Message>(this);
 
-  @OneToMany({ mappedBy: 'conversation', persist: false })
+  @OneToMany({ entity: () => Message, mappedBy: 'conversation', persist: false })
   lastMessage = new Collection<Message>(this);
 
   @Property({ persist: false })

@@ -14,13 +14,13 @@ export class Message {
   @PrimaryKey()
   id!: number;
 
-  @Property({ length: 255})
+  @Property({ length: 255 })
   message!: string;
 
-  @ManyToOne()
+  @ManyToOne({ entity: () => Conversation })
   conversation!: Conversation;
 
-  @ManyToOne()
+  @ManyToOne({ entity: () => User })
   sender!: User;
 
   @Enum(() => MessageType)
@@ -31,5 +31,5 @@ export class Message {
 }
 
 export enum MessageType {
-    MESSAGE = 'message',
+  MESSAGE = 'message',
 }

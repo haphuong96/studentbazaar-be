@@ -6,7 +6,7 @@ import {
   ManyToOne,
   OneToOne,
   wrap,
-  EntityDTO
+  EntityDTO,
 } from '@mikro-orm/core';
 import { Item } from './item.entity';
 import { AzureStorageBlob } from '../../azure-blob-storage/blob.entity';
@@ -22,7 +22,7 @@ export class ItemImage {
   @OneToOne()
   thumbnail!: AzureStorageBlob;
 
-  @ManyToOne()
+  @ManyToOne({ entity: () => Item })
   item!: Item;
 
   /**
@@ -31,8 +31,11 @@ export class ItemImage {
    * @returns
    */
   toJSON(...args: any[]): { [p: string]: any } {
-    const o : EntityDTO<this> = wrap(this, true).toObject(...args); // do not forget to pass rest params here
+    const o: EntityDTO<this> = wrap(this, true).toObject(...args); // do not forget to pass rest params here
 
-    return { url: o['image']['imgPath'], thumbnailUrl: o['thumbnail']['imgPath'] };
+    return {
+      url: o['image']['imgPath'],
+      thumbnailUrl: o['thumbnail']['imgPath'],
+    };
   }
 }

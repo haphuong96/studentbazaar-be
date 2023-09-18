@@ -23,6 +23,9 @@ export class UniversityCampus {
   @ManyToOne()
   campusLocation!: CampusLocation;
 
-  @OneToMany( { mappedBy: 'universityCampusLocation'})
+  @OneToMany({
+    entity: () => PickUpPoint,
+    mappedBy: 'universityCampusLocation',
+  })
   pickUpPoints? = new Collection<PickUpPoint>(this);
 }

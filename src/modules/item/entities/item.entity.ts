@@ -21,7 +21,7 @@ export class Item {
   @PrimaryKey()
   id!: number;
 
-  @ManyToOne()
+  @ManyToOne({ entity: () => User })
   owner!: User;
 
   @ManyToOne()
@@ -33,7 +33,11 @@ export class Item {
   @Enum(() => ItemStatus)
   status!: ItemStatus;
 
-  @OneToMany({ mappedBy: 'item', cascade: [Cascade.REMOVE] })
+  @OneToMany({
+    entity: () => ItemImage,
+    mappedBy: 'item',
+    cascade: [Cascade.REMOVE],
+  })
   img? = new Collection<ItemImage>(this);
 
   @Property({ length: 255 })
@@ -54,7 +58,7 @@ export class Item {
   @Property({ type: types.datetime, defaultRaw: `current_timestamp()` })
   lastUpdatedDatetime!: Date;
 
-  @ManyToMany({ mappedBy: 'favoriteItems' })
+  @ManyToMany({ entity: () => User, mappedBy: 'favoriteItems' })
   favoritedBy = new Collection<User>(this);
 
   @Property({ persist: false })
@@ -83,8 +87,6 @@ export class Item {
     this.itemPrice = item.itemPrice;
   }
 }
-
-
 
 export enum ItemStatus {
   DRAFT = 'DRAFT',

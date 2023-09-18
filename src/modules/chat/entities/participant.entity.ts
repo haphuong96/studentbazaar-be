@@ -11,16 +11,15 @@ import { Message } from './message.entity';
 
 @Entity()
 export class ConversationParticipant {
-  @ManyToOne()
+  @ManyToOne({ entity: () => Conversation })
   conversation!: Conversation;
 
-  @ManyToOne({name: 'user_id'})
+  @ManyToOne({ entity: () => User, name: 'user_id' })
   participant!: User;
 
-  @ManyToOne()
+  @ManyToOne({ entity: () => Message })
   lastReadMessage?: Message;
 
   @PrimaryKey()
   id!: number;
-
 }

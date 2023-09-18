@@ -48,7 +48,7 @@ export class User {
   @ManyToMany({ entity: () => Conversation, mappedBy: 'participants'})
   conversations = new Collection<Conversation>(this);
 
-  @ManyToMany({ pivotTable: 'user_favorite_item'})
+  @ManyToMany({ entity: () => Item, pivotTable: 'user_favorite_item'})
   favoriteItems = new Collection<Item>(this);
 
   constructor(user: {

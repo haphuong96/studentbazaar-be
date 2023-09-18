@@ -21,7 +21,10 @@ export class University {
   @Property({ length: 255, hidden: true })
   emailAddressDomain!: string;
 
-  @ManyToMany( { pivotEntity: () => UniversityCampus })
+  @ManyToMany({
+    entity: () => CampusLocation,
+    pivotEntity: () => UniversityCampus,
+  })
   campuses = new Collection<CampusLocation>(this);
 
   constructor(id: number, universityName: string, emailAddressDomain: string) {
